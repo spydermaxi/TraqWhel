@@ -15,6 +15,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # History
 # 2021-09-29: v0.0.1 [Adrian Loo] Development start
 # 2021-09-29: v0.0.1 [Adrian Loo] StartPage completed
+# 2021-09-30: v0.0.1 [Adrian Loo] Fix page size and position
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -115,11 +116,12 @@ class TyreApp(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
 
-        tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
+        # tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
         tk.Tk.wm_title(
             self, "Modern Wong Transport Tyre Inventory and Tracking - {}".format(main_ver))
 
-        self.geometry("+10+10")
+        self.geometry("1220x720+10+10")
+        self.minsize(1016, 600)
 
         style = ttk.Style(self)
         style.configure("TRadiobutton", font=RB_FONT)
@@ -169,34 +171,33 @@ class TyreApp(tk.Tk):
 
 class StartPage(tk.Frame):
     '''
-    [Unreleased]
-    The complete installer GUI for ProMon Installation
+    The initialize page of the app with 3 selections
     '''
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.configure(height='700', width='1200')
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
         self.header_lbl = ttk.Label(self)
         self.header_lbl.configure(font='{Source Sans Pro} 32 {bold}',
                                   justify='center', text='Modern Wong Tyre & Inventory Tracking')
-        self.header_lbl.place(anchor='n', x='600', y='100')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.1')
 
         self.track_tyre_lbl = ttk.Label(self)
         self.track_tyre_lbl.configure(
             font='{source sans pro} 18 {bold}', justify='center', text='Track\nTyre')
-        self.track_tyre_lbl.place(anchor='n', x='350', y='200')
+        self.track_tyre_lbl.place(anchor='n', relx='0.3', rely='0.3')
 
         self.track_inv_lbl = ttk.Label(self)
         self.track_inv_lbl.configure(
             font='{source sans pro} 18 {bold}', justify='center', text='Track\nInventory')
-        self.track_inv_lbl.place(anchor='n', x='600', y='200')
+        self.track_inv_lbl.place(anchor='n', relx='0.5', rely='0.3')
 
         self.dashboard_lbl = ttk.Label(self)
         self.dashboard_lbl.configure(
             font='{source sans pro} 18 {bold}', justify='center', text='Launch\nDashboard')
-        self.dashboard_lbl.place(anchor='n', x='850', y='200')
+        self.dashboard_lbl.place(anchor='n', relx='0.7', rely='0.3')
 
         self.track_tyre_btn = ttk.Button(
             self, command=lambda: controller.show_frame(TrackTyrePage))
@@ -205,7 +206,7 @@ class StartPage(tk.Frame):
         self.track_tyre_btn.configure(
             image=self.mw_blue_truck_png, text='Track Tyre')
         self.track_tyre_btn.place(
-            anchor='n', height='140', width='140', x='350', y='300')
+            anchor='n', height='140', width='140', relx='0.3', rely='0.4')
 
         self.track_inv_btn = ttk.Button(
             self, command=lambda: controller.show_frame(TrackInvPage))
@@ -214,7 +215,7 @@ class StartPage(tk.Frame):
         self.track_inv_btn.configure(
             image=self.mw_green_truck_png, text='Track Inventory')
         self.track_inv_btn.place(
-            anchor='n', height='140', width='140', x='600', y='300')
+            anchor='n', height='140', width='140', relx='0.5', rely='0.4')
 
         self.launch_db_btn = ttk.Button(
             self, command=lambda: controller.show_frame(DashboardPage))
@@ -223,61 +224,82 @@ class StartPage(tk.Frame):
         self.launch_db_btn.configure(
             image=self.mw_white_truck_png, text='Launch Dashboard')
         self.launch_db_btn.place(
-            anchor='n', height='140', width='140', x='850', y='300')
+            anchor='n', height='140', width='140', relx='0.7', rely='0.4')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
-        self.exit_btn.place(anchor='n', x='600', y='650')
+        self.exit_btn.place(anchor='n', relx='0.5', rely='0.9')
 
 
 class TrackTyrePage(tk.Frame):
     '''
-    [Unreleased]
-    The complete installer GUI for ProMon Installation
+    The tyre tracking interface page of the app
     '''
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.configure(height='700', width='1200')
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
+        self.header_lbl = ttk.Label(self)
+        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
+                                  justify='center', text='Tyre Tracking')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
 
+
+
+        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
-        self.exit_btn.place(anchor='n', x='600', y='650')
+        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
 
 class TrackInvPage(tk.Frame):
     '''
-    [Unreleased]
-    The complete installer GUI for ProMon Installation
+    The inventory tracking interface page of the app
     '''
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.configure(height='700', width='1200')
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
+        self.header_lbl = ttk.Label(self)
+        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
+                                  justify='center', text='Inventory Tracking')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
 
+
+
+        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
-        self.exit_btn.place(anchor='n', x='600', y='650')
+        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
 
 class DashboardPage(tk.Frame):
     '''
-    [Unreleased]
-    The complete installer GUI for ProMon Installation
+    The dashboard page of the app
     '''
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.configure(height='700', width='1200')
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
+        self.header_lbl = ttk.Label(self)
+        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
+                                  justify='center', text='Dashboard Overview')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
 
+
+
+        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
-        self.exit_btn.place(anchor='n', x='600', y='650')
+        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
 
 # ----- Execution ----- #
