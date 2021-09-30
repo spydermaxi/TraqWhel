@@ -14,8 +14,9 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 #
 # History
 # 2021-09-29: v0.0.1 [Adrian Loo] Development start
-# 2021-09-29: v0.0.1 [Adrian Loo] StartPage completed
+# 2021-09-29: v0.0.1 [Adrian Loo] Complete StartPage
 # 2021-09-30: v0.0.1 [Adrian Loo] Fix page size and position
+# 2021-10-01: v0.0.1 [Adrian Loo] Complete Track Inventory Page
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -26,20 +27,21 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 
 # Import Modules
 
-import glob
 import os
 import sys
-import subprocess
 import re
 import shutil
 import random
 import logging
-import zipfile
 from datetime import datetime
-from distutils.dir_util import copy_tree
-from xml.etree import ElementTree as ET
-from xml.dom import minidom
 
+import matplotlib
+matplotlib.use('TkAgg')
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+
+import numpy as np
 import pandas as pd
 
 import tkinter as tk
@@ -106,7 +108,7 @@ class TyreApp(tk.Tk):
     Main GUI interface for MW Tyre App
 
     Initiation codes
-    app = ProMonInstaller()
+    app = TyreApp()
     app.mainloop()
     '''
 
@@ -116,7 +118,7 @@ class TyreApp(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
 
-        # tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
+        tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
         tk.Tk.wm_title(
             self, "Modern Wong Transport Tyre Inventory and Tracking - {}".format(main_ver))
 
@@ -266,10 +268,84 @@ class TrackInvPage(tk.Frame):
 
         self.header_lbl = ttk.Label(self)
         self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
-                                  justify='center', text='Inventory Tracking')
+                                  justify='center', text='Tyre Inventory Tracking')
         self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
 
+        self.inv_sum_lbf = ttk.Labelframe(self)
+        self.inv_sum_lbf.configure(labelanchor='n', text='Tyre Inventory Summary')
+        self.inv_sum_lbf.place(anchor='n', relheight='0.85', relwidth='0.48', relx='0.25', rely='0.06', x='0', y='0')
 
+        self.cur_inv_lbf = ttk.Labelframe(self.inv_sum_lbf)
+        self.cur_inv_lbf.configure(text='Current Inventory')
+        self.cur_inv_lbf.place(anchor='n', relheight='0.35', relwidth='0.95', relx='0.5', rely='0.01', x='0', y='0')
+
+        self.refresh_btn = ttk.Button(self.inv_sum_lbf, command=self.update_inv_trend)
+        self.refresh_btn.configure(text='Refresh')
+        self.refresh_btn.place(anchor='nw', relheight='0.05', relwidth='0.2', relx='0.03', rely='0.38', x='0', y='0')
+
+        self.fig = plt.figure(1)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.inv_sum_lbf)
+        self.plot_widget = self.canvas.get_tk_widget()
+        self.plot_widget.place(anchor='n', relheight='0.52', relwidth='0.95', relx='0.5', rely='0.45')
+        self.update_inv_trend()
+
+        self.inv_input_lbf = ttk.Labelframe(self)
+        self.inv_input_lbf.configure(labelanchor='n', text='Input Data')
+        self.inv_input_lbf.place(anchor='n', relheight='0.85', relwidth='0.48', relx='0.75', rely='0.06', x='0', y='0')
+
+        self.tyre_name_lbl = ttk.Label(self.inv_input_lbf)
+        self.tyre_name_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Tyre Name: ')
+        self.tyre_name_lbl.place(anchor='ne', relx='0.4', rely='0.1', x='0', y='0')
+
+        self.tyre_qty_lbl = ttk.Label(self.inv_input_lbf)
+        self.tyre_qty_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Quantity: ')
+        self.tyre_qty_lbl.place(anchor='ne', relx='0.4', rely='0.2', x='0', y='0')
+
+        self.cost_lbl = ttk.Label(self.inv_input_lbf)
+        self.cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Cost/Unit: ')
+        self.cost_lbl.place(anchor='ne', relx='0.4', rely='0.3', x='0', y='0')
+
+        self.total_cost_lbl = ttk.Label(self.inv_input_lbf)
+        self.total_cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Total Cost: ')
+        self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.4', x='0', y='0')
+
+        self.tyre_name_entry = ttk.Entry(self.inv_input_lbf)
+        self.tyre_name_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
+        _text_ = '''Enter Product Name'''
+        self.tyre_name_entry.delete('0', 'end')
+        self.tyre_name_entry.insert('0', _text_)
+        self.tyre_name_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.1', x='0', y='0')
+
+        self.qty_entry = ttk.Entry(self.inv_input_lbf)
+        self.qty_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
+        _text_ = '''Enter Quantity'''
+        self.qty_entry.delete('0', 'end')
+        self.qty_entry.insert('0', _text_)
+        self.qty_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.2', x='0', y='0')
+
+        self.cost_entry = ttk.Entry(self.inv_input_lbf)
+        self.cost_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
+        _text_ = '''Enter Cost Per Unit'''
+        self.cost_entry.delete('0', 'end')
+        self.cost_entry.insert('0', _text_)
+        self.cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.3', x='0', y='0')
+
+        self.total_cost_entry = ttk.Entry(self.inv_input_lbf)
+        self.total_cost_entry.configure(cursor='hand2', font='{source sans pro} 16 {}', state='readonly')
+        _text_ = '''Total Cost'''
+        self.total_cost_entry['state'] = 'normal'
+        self.total_cost_entry.delete('0', 'end')
+        self.total_cost_entry.insert('0', _text_)
+        self.total_cost_entry['state'] = 'readonly'
+        self.total_cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.4', x='0', y='0')
+
+        self.submit_btn = ttk.Button(self.inv_input_lbf)
+        self.submit_btn.configure(text='Submit Entry')
+        self.submit_btn.place(anchor='n', relheight='0.1', relwidth='0.3', relx='0.5', rely='0.5', x='0', y='0')
+
+        self.download_btn = ttk.Button(self.inv_input_lbf)
+        self.download_btn.configure(text='Download All Data')
+        self.download_btn.place(anchor='n', relheight='0.1', relwidth='0.3', relx='0.5', rely='0.65', x='0', y='0')
 
         self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
@@ -277,6 +353,12 @@ class TrackInvPage(tk.Frame):
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
+    def update_inv_trend(self):
+        plt.ion()
+        t = np.arange(0.0,random.random(),0.01)
+        s = np.sin(np.pi*t)
+        plt.plot(t,s)
+        self.fig.canvas.draw()
 
 class DashboardPage(tk.Frame):
     '''
