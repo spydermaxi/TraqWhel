@@ -33,7 +33,7 @@ import re
 import shutil
 import random
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -56,6 +56,11 @@ LARGE_FONT = ("Verdana", 12, "bold")
 LB_FONT = ("Verdana", 11, "bold")
 RB_FONT = ("Verdana", 10)
 
+DATA_SOURCE = os.path.join(os.getcwd(), "Data")
+INV_DB = os.path.join(DATA_SOURCE, "tyre_inventory_db.csv")
+INV_IN_DB = os.path.join(DATA_SOURCE, "tyre_inventory_in_db.csv")
+TRACK_DB = os.path.join(DATA_SOURCE, "tyre_tracking_db.csv")
+
 
 def create_logger(name, basefile, version, loglevel):
     '''
@@ -74,6 +79,10 @@ def create_logger(name, basefile, version, loglevel):
     '''
     # Create log directory
     log_dir = os.path.join(os.getcwd(), "Logs")
+    try:
+        os.mkdir(log_dir)
+    except Exception as e:
+        pass
 
     # setup logger
     logger = logging.getLogger(name)
@@ -266,6 +275,8 @@ class TrackInvPage(tk.Frame):
         self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
+        self.currency = "RM"
+
         self.header_lbl = ttk.Label(self)
         self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
                                   justify='center', text='Tyre Inventory Tracking')
@@ -283,10 +294,11 @@ class TrackInvPage(tk.Frame):
         self.refresh_btn.configure(text='Refresh')
         self.refresh_btn.place(anchor='nw', relheight='0.05', relwidth='0.2', relx='0.03', rely='0.38', x='0', y='0')
 
-        self.fig = plt.figure(1)
+        self.fig, self.ax = plt.subplots(tight_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.inv_sum_lbf)
         self.plot_widget = self.canvas.get_tk_widget()
         self.plot_widget.place(anchor='n', relheight='0.52', relwidth='0.95', relx='0.5', rely='0.45')
+        plt.rcParams.update({'font.size': 7})
         self.update_inv_trend()
 
         self.inv_input_lbf = ttk.Labelframe(self)
@@ -302,7 +314,7 @@ class TrackInvPage(tk.Frame):
         self.tyre_qty_lbl.place(anchor='ne', relx='0.4', rely='0.2', x='0', y='0')
 
         self.cost_lbl = ttk.Label(self.inv_input_lbf)
-        self.cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Cost/Unit: ')
+        self.cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Cost/Unit ({}): '.format(self.currency))
         self.cost_lbl.place(anchor='ne', relx='0.4', rely='0.3', x='0', y='0')
 
         self.total_cost_lbl = ttk.Label(self.inv_input_lbf)
@@ -310,32 +322,38 @@ class TrackInvPage(tk.Frame):
         self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.4', x='0', y='0')
 
         self.tyre_name_entry = ttk.Entry(self.inv_input_lbf)
-        self.tyre_name_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
-        _text_ = '''Enter Product Name'''
+        self.tyre_name_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
+        self._tyre_name_text_ = '''Enter Product Name'''
         self.tyre_name_entry.delete('0', 'end')
-        self.tyre_name_entry.insert('0', _text_)
+        self.tyre_name_entry.insert('0', self._tyre_name_text_)
+        self.tyre_name_entry.bind('<FocusIn>', self.on_tyre_name_entry_click)
+        self.tyre_name_entry.bind('<FocusOut>', self.on_tyre_name_entry_focus_out)
         self.tyre_name_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.1', x='0', y='0')
 
         self.qty_entry = ttk.Entry(self.inv_input_lbf)
-        self.qty_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
-        _text_ = '''Enter Quantity'''
+        self.qty_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
+        self.qty_text_ = '''Enter Quantity'''
         self.qty_entry.delete('0', 'end')
-        self.qty_entry.insert('0', _text_)
+        self.qty_entry.insert('0', self.qty_text_)
+        self.qty_entry.bind('<FocusIn>', self.on_qty_entry_click)
+        self.qty_entry.bind('<FocusOut>', self.on_qty_entry_focus_out)
         self.qty_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.2', x='0', y='0')
 
         self.cost_entry = ttk.Entry(self.inv_input_lbf)
-        self.cost_entry.configure(cursor='hand2', font='{source sans pro} 16 {}')
-        _text_ = '''Enter Cost Per Unit'''
+        self.cost_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
+        self.cost_text_ = '''Enter Cost Per Unit'''
         self.cost_entry.delete('0', 'end')
-        self.cost_entry.insert('0', _text_)
+        self.cost_entry.insert('0', self.cost_text_)
+        self.cost_entry.bind('<FocusIn>', self.on_cost_entry_click)
+        self.cost_entry.bind('<FocusOut>', self.on_cost_entry_focus_out)
         self.cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.3', x='0', y='0')
 
         self.total_cost_entry = ttk.Entry(self.inv_input_lbf)
         self.total_cost_entry.configure(cursor='hand2', font='{source sans pro} 16 {}', state='readonly')
-        _text_ = '''Total Cost'''
+        self.total_cost_text_ = '''Total Cost'''
         self.total_cost_entry['state'] = 'normal'
         self.total_cost_entry.delete('0', 'end')
-        self.total_cost_entry.insert('0', _text_)
+        self.total_cost_entry.insert('0', self.total_cost_text_)
         self.total_cost_entry['state'] = 'readonly'
         self.total_cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.4', x='0', y='0')
 
@@ -354,11 +372,110 @@ class TrackInvPage(tk.Frame):
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
     def update_inv_trend(self):
-        plt.ion()
-        t = np.arange(0.0,random.random(),0.01)
-        s = np.sin(np.pi*t)
-        plt.plot(t,s)
+        self.ax.cla()
+
+        self.update_all_data()
+
+        df = pd.read_csv(INV_DB).tail(6)
+        df.sort_values("Time", inplace=True)
+        df.set_index("Time", inplace=True)
+
+        df.plot(kind='bar', ax=self.ax, grid=True)
+
+        self.ax.tick_params(axis="x", labelrotation=0)
+        self.ax.set_xlabel("Time")
+        self.ax.set_ylabel("Count of Tyres")
+        self.ax.set_title("Tyre Inventory Trend as of {}".format(datetime.now().replace(microsecond=0)))
         self.fig.canvas.draw()
+
+    def update_all_data(self):
+        inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
+        trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+
+        inv['Date'] = pd.to_datetime(inv['Datetime'].dt.date)
+
+        df = pd.DataFrame(trk.pivot_table(values='Tyre_Size', index='Date', columns='Tyre_Name', aggfunc='count').to_records())
+        df.set_index('Date', inplace=True)
+        df = df * -1
+        df.reset_index(inplace=True)
+        df = df.append(pd.DataFrame(inv.pivot_table(values='Quantity', index='Date', columns='Tyre_Name', aggfunc='sum', fill_value=0).to_records()))
+
+        df.sort_values(['Date'], inplace=True)
+        df['Year'] = df['Date'].dt.year
+        df['Month'] = df['Date'].dt.month
+        df['Month'] = df['Month'].apply(lambda x: "0{}".format(x) if x<10 else str(x))
+        df['Time'] = df['Year'].astype("str") + "-" + df['Month'].astype("str")
+
+        df.drop(['Date','Year','Month'], inplace=True, axis=1)
+
+        pv = df.pivot_table(values=inv['Tyre_Name'].unique(), index=df['Time'], aggfunc='sum')
+        pv = pv.cumsum()
+        pv.to_csv(os.path.join(os.getcwd(),"Data","tyre_inventory_db.csv"))
+
+    def on_tyre_name_entry_click(self, event):
+        """function that gets called whenever entry is clicked"""
+        if self.tyre_name_entry.get() == self._tyre_name_text_:
+           self.tyre_name_entry.delete(0, "end")
+           self.tyre_name_entry.insert(0, '')
+           self.tyre_name_entry.config(foreground = 'black')
+
+    def on_tyre_name_entry_focus_out(self, event):
+        """function that checked the entry field after every input"""
+        if self.tyre_name_entry.get() == '':
+            self.tyre_name_entry.insert(0, self._tyre_name_text_)
+            self.tyre_name_entry.config(foreground = 'grey')
+
+    def on_qty_entry_click(self, event):
+        """function that gets called whenever entry is clicked"""
+        if self.qty_entry.get() == self.qty_text_:
+            self.qty_entry.delete(0, "end")
+            self.qty_entry.insert(0, '')
+            self.qty_entry.config(foreground = 'black')
+
+    def on_qty_entry_focus_out(self, event):
+        """function that checked the entry field after every input"""
+        if self.qty_entry.get() == '':
+            self.qty_entry.insert(0, self.qty_text_)
+            self.qty_entry.config(foreground = 'grey')
+            self.update_total_cost_entry(self.total_cost_text_)
+
+        elif self.cost_entry.get() != self.cost_text_:
+            self.calculate_total_cost()
+
+    def on_cost_entry_click(self, event):
+        """function that gets called whenever entry is clicked"""
+        if self.cost_entry.get() == self.cost_text_:
+            self.cost_entry.delete(0, "end")
+            self.cost_entry.insert(0, '')
+            self.cost_entry.config(foreground = 'black')
+
+    def on_cost_entry_focus_out(self, event):
+        """function that checked the entry field after every input"""
+        if self.cost_entry.get() == '':
+            self.cost_entry.insert(0, self.cost_text_)
+            self.cost_entry.config(foreground = 'grey')
+            self.update_total_cost_entry(self.total_cost_text_)
+
+        elif self.qty_entry.get() != self.qty_text_:
+            self.calculate_total_cost()
+
+    def update_total_cost_entry(self, total_cost_txt):
+        self.total_cost_entry['state'] = 'enabled'
+        self.total_cost_entry.delete(0, "end")
+        self.total_cost_entry.insert(0, total_cost_txt)
+        self.total_cost_entry.config(foreground = 'black')
+        self.total_cost_entry['state'] = 'readonly'
+
+    def calculate_total_cost(self):
+        try:
+            total_cost = round(float(self.qty_entry.get()) * float(self.cost_entry.get()),2)
+            total_cost_txt = "{}{}".format(self.currency, total_cost)
+        except Exception as e:
+            total_cost_txt = "Error - {}".format(e)
+            logger.exception("Error on calculating total cost - {}".format(e))
+
+        self.update_total_cost_entry(total_cost_txt)
+
 
 class DashboardPage(tk.Frame):
     '''
