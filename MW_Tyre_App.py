@@ -17,6 +17,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-09-29: v0.0.1 [Adrian Loo] Complete StartPage
 # 2021-09-30: v0.0.1 [Adrian Loo] Fix page size and position
 # 2021-10-01: v0.0.1 [Adrian Loo] Complete Track Inventory Page
+# 2021-10-02: v0.0.1 [Adrian Loo] Completd Track Inventory Page functions
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -57,9 +58,15 @@ LB_FONT = ("Verdana", 11, "bold")
 RB_FONT = ("Verdana", 10)
 
 DATA_SOURCE = os.path.join(os.getcwd(), "Data")
-INV_DB = os.path.join(DATA_SOURCE, "tyre_inventory_db.csv")
-INV_IN_DB = os.path.join(DATA_SOURCE, "tyre_inventory_in_db.csv")
-TRACK_DB = os.path.join(DATA_SOURCE, "tyre_tracking_db.csv")
+
+INV_FILE_NAME = "tyre_inventory_db.csv"
+INV_DB = os.path.join(DATA_SOURCE, INV_FILE_NAME)
+
+INV_IN_FILE_NAME = "tyre_inventory_in_db.csv"
+INV_IN_DB = os.path.join(DATA_SOURCE, INV_IN_FILE_NAME)
+
+TRACK_FILE_NAME = "tyre_tracking_db.csv"
+TRACK_DB = os.path.join(DATA_SOURCE, TRACK_FILE_NAME)
 
 
 def create_logger(name, basefile, version, loglevel):
@@ -284,26 +291,28 @@ class TrackInvPage(tk.Frame):
 
         self.inv_sum_lbf = ttk.Labelframe(self)
         self.inv_sum_lbf.configure(labelanchor='n', text='Tyre Inventory Summary')
-        self.inv_sum_lbf.place(anchor='n', relheight='0.85', relwidth='0.48', relx='0.25', rely='0.06', x='0', y='0')
+        self.inv_sum_lbf.place(anchor='n', relheight='0.88', relwidth='0.48', relx='0.25', rely='0.06', x='0', y='0')
 
         self.cur_inv_lbf = ttk.Labelframe(self.inv_sum_lbf)
         self.cur_inv_lbf.configure(text='Current Inventory')
-        self.cur_inv_lbf.place(anchor='n', relheight='0.35', relwidth='0.95', relx='0.5', rely='0.01', x='0', y='0')
+        self.cur_inv_lbf.place(anchor='n', relheight='0.3', relwidth='0.95', relx='0.5', rely='0.01', x='0', y='0')
 
         self.refresh_btn = ttk.Button(self.inv_sum_lbf, command=self.update_inv_trend)
         self.refresh_btn.configure(text='Refresh')
-        self.refresh_btn.place(anchor='nw', relheight='0.05', relwidth='0.2', relx='0.03', rely='0.38', x='0', y='0')
+        self.refresh_btn.place(anchor='nw', relheight='0.05', relwidth='0.2', relx='0.03', rely='0.32', x='0', y='0')
 
         self.fig, self.ax = plt.subplots(tight_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.inv_sum_lbf)
+        # toolbar = NavigationToolbar2TkAgg(self.canvas, master=self.inv_sum_lbf)
+        # toolbar.update()
         self.plot_widget = self.canvas.get_tk_widget()
-        self.plot_widget.place(anchor='n', relheight='0.52', relwidth='0.95', relx='0.5', rely='0.45')
+        self.plot_widget.place(anchor='n', relheight='0.6', relwidth='0.95', relx='0.5', rely='0.38')
         plt.rcParams.update({'font.size': 7})
         self.update_inv_trend()
 
         self.inv_input_lbf = ttk.Labelframe(self)
         self.inv_input_lbf.configure(labelanchor='n', text='Input Data')
-        self.inv_input_lbf.place(anchor='n', relheight='0.85', relwidth='0.48', relx='0.75', rely='0.06', x='0', y='0')
+        self.inv_input_lbf.place(anchor='n', relheight='0.88', relwidth='0.48', relx='0.75', rely='0.06', x='0', y='0')
 
         self.tyre_name_lbl = ttk.Label(self.inv_input_lbf)
         self.tyre_name_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Tyre Name: ')
@@ -318,7 +327,7 @@ class TrackInvPage(tk.Frame):
         self.cost_lbl.place(anchor='ne', relx='0.4', rely='0.3', x='0', y='0')
 
         self.total_cost_lbl = ttk.Label(self.inv_input_lbf)
-        self.total_cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Total Cost: ')
+        self.total_cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Total Cost ({}): '.format(self.currency))
         self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.4', x='0', y='0')
 
         self.tyre_name_entry = ttk.Entry(self.inv_input_lbf)
@@ -357,13 +366,13 @@ class TrackInvPage(tk.Frame):
         self.total_cost_entry['state'] = 'readonly'
         self.total_cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.4', x='0', y='0')
 
-        self.submit_btn = ttk.Button(self.inv_input_lbf)
+        self.submit_btn = ttk.Button(self.inv_input_lbf, command=self.submit_entry)
         self.submit_btn.configure(text='Submit Entry')
-        self.submit_btn.place(anchor='n', relheight='0.1', relwidth='0.3', relx='0.5', rely='0.5', x='0', y='0')
+        self.submit_btn.place(anchor='n', relheight='0.1', relwidth='0.5', relx='0.5', rely='0.55', x='0', y='0')
 
-        self.download_btn = ttk.Button(self.inv_input_lbf)
-        self.download_btn.configure(text='Download All Data')
-        self.download_btn.place(anchor='n', relheight='0.1', relwidth='0.3', relx='0.5', rely='0.65', x='0', y='0')
+        self.download_btn = ttk.Button(self.inv_input_lbf, command=self.download_inv_data)
+        self.download_btn.configure(text='Download Inventory Data')
+        self.download_btn.place(anchor='n', relheight='0.1', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
 
         self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
@@ -372,21 +381,30 @@ class TrackInvPage(tk.Frame):
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
     def update_inv_trend(self):
+
         self.ax.cla()
-
         self.update_all_data()
-
         df = pd.read_csv(INV_DB).tail(6)
         df.sort_values("Time", inplace=True)
         df.set_index("Time", inplace=True)
-
         df.plot(kind='bar', ax=self.ax, grid=True)
-
         self.ax.tick_params(axis="x", labelrotation=0)
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Count of Tyres")
         self.ax.set_title("Tyre Inventory Trend as of {}".format(datetime.now().replace(microsecond=0)))
         self.fig.canvas.draw()
+
+        df = df.tail(1)
+        ct = 0
+        for c in df.columns:
+            ct += 1
+            tyre_name_lbl = ttk.Label(self.cur_inv_lbf)
+            tyre_name_lbl.configure(font='{source sans pro} 12 {bold}', justify='right', text='{}: '.format(c))
+            tyre_name_lbl.place(anchor='ne', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
+
+            tyre_qty_lbl = ttk.Label(self.cur_inv_lbf)
+            tyre_qty_lbl.configure(font='{source sans pro} 12 {}', justify='right', text='{} Qty'.format(df[c].values[0]))
+            tyre_qty_lbl.place(anchor='nw', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
 
     def update_all_data(self):
         inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
@@ -411,6 +429,71 @@ class TrackInvPage(tk.Frame):
         pv = df.pivot_table(values=inv['Tyre_Name'].unique(), index=df['Time'], aggfunc='sum')
         pv = pv.cumsum()
         pv.to_csv(os.path.join(os.getcwd(),"Data","tyre_inventory_db.csv"))
+
+    def submit_entry(self):
+        #validate entry:
+        if any([self.tyre_name_entry.get() == self._tyre_name_text_, self.qty_entry.get() == self.qty_text_, self.cost_entry.get() == self.cost_text_]):
+            pass
+        else:
+            if tkMessageBox.askyesno("Confirmation", "You've entered the following:\nProduct Name: {}\nProduct Quantiy: {}\nCost\\Unit: {}{}\nTotal Cost: {}{}\nConfirm?".format(self.tyre_name_entry.get(), self.qty_entry.get(), self.currency, self.cost_entry.get(), self.currency, self.total_cost_entry.get())):
+                logger.info("User Confirmed")
+
+                ddict = {}
+                ddict['Datetime'] = datetime.now().replace(microsecond=0)
+                ddict['Tyre_Name'] = self.tyre_name_entry.get()
+                ddict['Quantity'] = float(self.qty_entry.get())
+                ddict['Cost/Unit'] = float(self.cost_entry.get())
+                ddict['Total_Cost'] = float(self.total_cost_entry.get())
+                logger.info("Data Extracted - {}".format(ddict))
+
+                df = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
+                df.sort_values("Datetime", inplace=True)
+                df = df.append(pd.DataFrame([ddict]))
+                df.to_csv(INV_IN_DB, index=False)
+                logger.info("Inventory DB updated")
+
+                self.update_inv_trend()
+
+                tkMessageBox.showinfo("Information", "Update Inventory Success!")
+
+                self.clear_entries(self.tyre_name_entry, self._tyre_name_text_)
+                self.clear_entries(self.qty_entry, self.qty_text_)
+                self.clear_entries(self.cost_entry, self.cost_text_)
+                self.clear_total_cost_entry(self.total_cost_entry, self.total_cost_text_)
+
+            else:
+                pass
+
+    def download_inv_data(self):
+        exp_dir = tkFileDialog.askdirectory()
+        try:
+            shutil.copy(INV_IN_DB, os.path.join(exp_dir, INV_IN_FILE_NAME))
+        except IOError as io:
+            logger.exception("Error copying {} - {}".format(INV_IN_DB, e))
+
+        try:
+            shutil.copy(INV_DB, os.path.join(exp_dir, INV_FILE_NAME))
+        except IOError as io:
+            logger.exception("Error copying {} - {}".format(INV_DB, e))
+
+        if all([os.path.isfile(os.path.join(exp_dir, INV_IN_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, INV_FILE_NAME))]):
+            tkMessageBox.showinfo("Success", "File export Success")
+        else:
+            err_msg = "File export error! - Path: {} is {}, Path {} is {}".format(os.path.join(exp_dir, INV_IN_FILE_NAME), os.path.isfile(os.path.join(exp_dir, INV_IN_FILE_NAME)), os.path.join(exp_dir, INV_FILE_NAME), os.path.isfile(os.path.join(exp_dir, INV_FILE_NAME)))
+            logger.error(err_msg)
+            tkMessageBox.showerror("Error", err_msg)
+
+    def clear_entries(self, entry_box, entry_text):
+        entry_box.delete(0, "end")
+        entry_box.insert(0, entry_text)
+        entry_box.config(foreground = 'grey')
+
+    def clear_total_cost_entry(self, entry_box, entry_text):
+        entry_box['state'] = 'enabled'
+        entry_box.delete(0, "end")
+        entry_box.insert(0, entry_text)
+        entry_box.config(foreground = 'grey')
+        entry_box['state'] = 'readonly'
 
     def on_tyre_name_entry_click(self, event):
         """function that gets called whenever entry is clicked"""
@@ -469,7 +552,7 @@ class TrackInvPage(tk.Frame):
     def calculate_total_cost(self):
         try:
             total_cost = round(float(self.qty_entry.get()) * float(self.cost_entry.get()),2)
-            total_cost_txt = "{}{}".format(self.currency, total_cost)
+            total_cost_txt = str(total_cost)
         except Exception as e:
             total_cost_txt = "Error - {}".format(e)
             logger.exception("Error on calculating total cost - {}".format(e))
