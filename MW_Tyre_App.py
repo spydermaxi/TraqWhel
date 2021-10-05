@@ -13,13 +13,14 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 """
 #
 # History
-# 2021-09-29: v0.0.1 [Adrian Loo] Development start
-# 2021-09-29: v0.0.1 [Adrian Loo] Complete StartPage
-# 2021-09-30: v0.0.1 [Adrian Loo] Fix page size and position
-# 2021-10-01: v0.0.1 [Adrian Loo] Complete Track Inventory Page
-# 2021-10-02: v0.0.1 [Adrian Loo] Complete Track Inventory Page functions
-# 2021-10-04: v0.0.1 [Adrian Loo] Complete Dashboard Page, functions and visualization
-# 2021-10-04: v0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
+# 2021-09-29: 0.0.1 [Adrian Loo] Development start
+# 2021-09-29: 0.0.1 [Adrian Loo] Complete StartPage
+# 2021-09-30: 0.0.1 [Adrian Loo] Fix page size and position
+# 2021-10-01: 0.0.1 [Adrian Loo] Complete Track Inventory Page
+# 2021-10-02: 0.0.1 [Adrian Loo] Complete Track Inventory Page functions
+# 2021-10-04: 0.0.1 [Adrian Loo] Complete Dashboard Page, functions and visualization
+# 2021-10-04: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
+# 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -274,7 +275,7 @@ class TrackTyrePage(tk.Frame):
 
         self.date_lbl = ttk.Label(self.veh_param_lblf)
         self.date_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Date: ')
-        self.date_lbl.place(anchor='ne', relx='0.1', rely='0.01', x='0', y='0')
+        self.date_lbl.place(anchor='ne', relx='0.08', rely='0.01', x='0', y='0')
 
         self.date_entry = ttk.Entry(self.veh_param_lblf)
         self.date_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -282,11 +283,11 @@ class TrackTyrePage(tk.Frame):
         self.date_entry.delete('0', 'end')
         self.date_entry.insert('0', self.date_ent_txt)
         self.date_entry.bind('<FocusIn>', self.on_widget_click)
-        self.date_entry.place(anchor='nw', relx='0.1', x='0', y='0')
+        self.date_entry.place(anchor='nw', relx='0.08', x='0', y='0')
 
         self.activity_lbl = ttk.Label(self.veh_param_lblf)
         self.activity_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Activity: ')
-        self.activity_lbl.place(anchor='ne', relx='0.1', rely='0.31', x='0', y='0')
+        self.activity_lbl.place(anchor='ne', relx='0.08', rely='0.31', x='0', y='0')
 
         self.activity_entry = ttk.Entry(self.veh_param_lblf)
         self.activity_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -294,11 +295,11 @@ class TrackTyrePage(tk.Frame):
         self.activity_entry.delete('0', 'end')
         self.activity_entry.insert('0', self.activity_ent_txt)
         self.activity_entry.bind('<FocusIn>', self.on_widget_click)
-        self.activity_entry.place(anchor='nw', relx='0.1', rely='0.31', x='0', y='0')
+        self.activity_entry.place(anchor='nw', relx='0.08', rely='0.31', x='0', y='0')
 
         self.reason_lbl = ttk.Label(self.veh_param_lblf)
         self.reason_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Reason: ')
-        self.reason_lbl.place(anchor='ne', relx='0.1', rely='0.61', x='0', y='0')
+        self.reason_lbl.place(anchor='ne', relx='0.08', rely='0.61', x='0', y='0')
 
         self.reason_entry = ttk.Entry(self.veh_param_lblf)
         self.reason_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -306,23 +307,23 @@ class TrackTyrePage(tk.Frame):
         self.reason_entry.delete('0', 'end')
         self.reason_entry.insert('0', self.reason_ent_txt)
         self.reason_entry.bind('<FocusIn>', self.on_widget_click)
-        self.reason_entry.place(anchor='nw', relx='0.1', rely='0.61', x='0', y='0')
+        self.reason_entry.place(anchor='nw', relx='0.08', rely='0.61', x='0', y='0')
 
         self.emp_lbl = ttk.Label(self.veh_param_lblf)
         self.emp_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Employee Name: ')
-        self.emp_lbl.place(anchor='ne', relx='0.4', rely='0.01', x='0', y='0')
+        self.emp_lbl.place(anchor='ne', relx='0.33', rely='0.01', x='0', y='0')
 
         self.emp_entry = ttk.Entry(self.veh_param_lblf)
         self.emp_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.emp_ent_txt = '''eg: Adrian Loo'''
+        self.emp_ent_txt = '''eg: Sudin'''
         self.emp_entry.delete('0', 'end')
         self.emp_entry.insert('0', self.emp_ent_txt)
         self.emp_entry.bind('<FocusIn>', self.on_widget_click)
-        self.emp_entry.place(anchor='nw', relx='0.4', x='0', y='0')
+        self.emp_entry.place(anchor='nw', relx='0.33', x='0', y='0')
 
         self.veh_num_lbl = ttk.Label(self.veh_param_lblf)
         self.veh_num_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Vehicle Number: ')
-        self.veh_num_lbl.place(anchor='ne', relx='0.4', rely='0.31', x='0', y='0')
+        self.veh_num_lbl.place(anchor='ne', relx='0.33', rely='0.31', x='0', y='0')
 
         self.veh_num_entry = ttk.Entry(self.veh_param_lblf)
         self.veh_num_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -330,11 +331,11 @@ class TrackTyrePage(tk.Frame):
         self.veh_num_entry.delete('0', 'end')
         self.veh_num_entry.insert('0', self.veh_num_ent_txt)
         self.veh_num_entry.bind('<FocusIn>', self.on_widget_click)
-        self.veh_num_entry.place(anchor='nw', relx='0.4', rely='0.31', x='0', y='0')
+        self.veh_num_entry.place(anchor='nw', relx='0.33', rely='0.31', x='0', y='0')
 
         self.mile_lbl = ttk.Label(self.veh_param_lblf)
         self.mile_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Vehicle Mileage ')
-        self.mile_lbl.place(anchor='ne', relx='0.4', rely='0.61', x='0', y='0')
+        self.mile_lbl.place(anchor='ne', relx='0.33', rely='0.61', x='0', y='0')
 
         self.mile_entry = ttk.Entry(self.veh_param_lblf)
         self.mile_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -342,11 +343,11 @@ class TrackTyrePage(tk.Frame):
         self.mile_entry.delete('0', 'end')
         self.mile_entry.insert('0', self.mile_ent_txt)
         self.mile_entry.bind('<FocusIn>', self.on_widget_click)
-        self.mile_entry.place(anchor='nw', relx='0.4', rely='0.61', x='0', y='0')
+        self.mile_entry.place(anchor='nw', relx='0.33', rely='0.61', x='0', y='0')
 
         self.tyre_nm_lbl = ttk.Label(self.veh_param_lblf)
         self.tyre_nm_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Tyre Name: ')
-        self.tyre_nm_lbl.place(anchor='ne', relx='0.7', rely='0.01', x='0', y='0')
+        self.tyre_nm_lbl.place(anchor='ne', relx='0.58', rely='0.01', x='0', y='0')
 
         self.tyre_nm_entry = ttk.Entry(self.veh_param_lblf)
         self.tyre_nm_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
@@ -354,11 +355,28 @@ class TrackTyrePage(tk.Frame):
         self.tyre_nm_entry.delete('0', 'end')
         self.tyre_nm_entry.insert('0', self.tyre_nm_txt)
         self.tyre_nm_entry.bind('<FocusIn>', self.on_widget_click)
-        self.tyre_nm_entry.place(anchor='nw', relx='0.7', x='0', y='0')
+        self.tyre_nm_entry.place(anchor='nw', relx='0.58', x='0', y='0')
 
-        self.update_btn = ttk.Button(self.veh_param_lblf, command=self.submit_tyre_data)
-        self.update_btn.configure(text='Submit Entry', width='20')
-        self.update_btn.place(anchor='se', relx='0.98', rely='0.8', x='0', y='0')
+        self.submit_btn = ttk.Button(self.veh_param_lblf, command=self.submit_tyre_data)
+        self.submit_btn.configure(text='Submit Entry', width='20')
+        self.submit_btn.place(anchor='nw', relheight='0.62', relwidth='0.21', relx='0.51', rely='0.3', x='0', y='0')
+
+        self.check_stat_lbf = ttk.Labelframe(self.veh_param_lblf)
+        self.check_stat_lbf.configure(height='200', text='Serial Number Check', width='200')
+        self.check_stat_lbf.place(anchor='nw', relheight='0.95', relwidth='0.25', relx='0.74', rely='0.0', x='0', y='0')
+
+        self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
+        _vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
+        self.sel_vehnum_menu = tk.OptionMenu(self.check_stat_lbf, self._vehnum_tkvar, 'Select Vehicle Type', *_vehnum_values, command=None)
+        self.sel_vehnum_menu.place(anchor='ne', relheight='0.8', relwidth='0.6', relx='0.6', rely='0.1', x='0', y='0')
+
+        self.clear_btn = ttk.Button(self.check_stat_lbf, command=self.clear_tyre_data)
+        self.clear_btn.configure(text='Clear Tyres', width='18')
+        self.clear_btn.place(anchor='nw', relheight='0.4', relwidth='0.4', relx='0.6', rely='0.1', x='0', y='0')
+
+        self.check_btn = ttk.Button(self.check_stat_lbf, command=self.check_tyre_data)
+        self.check_btn.configure(text='Check Tyres', width='18')
+        self.check_btn.place(anchor='sw', relheight='0.4', relwidth='0.4', relx='0.6', rely='0.9', x='0', y='0')
 
         self.truck_loc_side = ttk.Label(self)
         self.tyre_loc_side_PNG = tk.PhotoImage(file=os.path.join(os.getcwd(), "Config", 'tyre_loc_side_large.PNG'))
@@ -650,6 +668,28 @@ class TrackTyrePage(tk.Frame):
             df.to_csv(TRACK_DB, index=False)
             tkMessageBox.showinfo("Success", "Tyre Event Updated")
 
+    def check_tyre_data(self):
+        try:
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = df[df['Vehicle_Number'] == self._vehnum_tkvar.get()]
+            df = df[df['Date'] == df['Date'].max()]
+            df.reset_index(drop=True, inplace=True)
+
+            for i in range(0, len(df)):
+                ent_field = self.ent_dict[df.loc[i, 'Tyre_Location'].lower().replace("-","_")]
+                ent_field.delete(0, "end")
+                ent_field.insert(0, df.loc[i, "Tyre_Serial"])
+                ent_field.config(foreground = "blue")
+        except Exception as e:
+            tkMessageBox.showerror("Error", "Please check Vehicle Number selection")
+            self.clear_tyre_data()
+
+    def clear_tyre_data(self):
+        for key, ent_field in self.ent_dict.items():
+            ent_field.delete(0, "end")
+            ent_field.insert(0, self.tyre_ent_text_)
+            ent_field.config(foreground = "grey")
+
     def on_widget_click(self, evt):
         self.widget = self.focus_get()
         logger.info("{} is in focus".format(self.widget))
@@ -677,6 +717,7 @@ class TrackTyrePage(tk.Frame):
             logger.info("Widget [{}] is empty - Returning original placeholder".format(self.widget))
             self.widget.insert(0, self.widget_data)
             self.widget.config(foreground = 'grey')
+
 
 class TrackInvPage(tk.Frame):
     '''
