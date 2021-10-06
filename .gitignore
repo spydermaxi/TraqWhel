@@ -1,3 +1,7 @@
+__pycache__
 _Reference
 _Scratch
+build
+dist
+*.spec
 *.log

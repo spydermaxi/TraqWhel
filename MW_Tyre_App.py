@@ -5,8 +5,8 @@
 #                                                                             #
 #-----------------------------------------------------------------------------#
 #
-# Ident        : ProMon_Setup.py
-__version__ = "0.0.1"
+# Ident        : MY_Tyre_App.py
+__version__ = "0.0.1 (MVP)"
 __author__ = "Adrian Loo"
 """
 The Tyre App for tracking tyre usage and inventory for Modern Wong
@@ -21,6 +21,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-04: 0.0.1 [Adrian Loo] Complete Dashboard Page, functions and visualization
 # 2021-10-04: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
 # 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
+# 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -43,10 +44,10 @@ from datetime import datetime, timedelta
 import matplotlib
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
-matplotlib.use('TkAgg')
-
+import matplotlib.backends.backend_tkagg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
 
 import numpy as np
 import pandas as pd
@@ -188,7 +189,7 @@ class TyreApp(tk.Tk):
         if tkMessageBox.askyesno('System Warning', 'Do you want to quit the application?'):
             logger.info("User terminate application")
             self.destroy()
-            exit()
+            sys.exit()
         else:
             pass
 
@@ -614,8 +615,13 @@ class TrackTyrePage(tk.Frame):
 
     def submit_tyre_data(self):
 
+        if tkMessageBox.askyesno("Confirm?", "Are you sure you want to save data?\nYou cannot undo this action."):
+            pass
+        else:
+            return
+
         # Validate Parameters Entry
-        validate_ls = [self.date_entry.get() == self.date_ent_txt, self.reason_entry.get() == self.reason_ent_txt, self.emp_entry.get() == self.emp_ent_txt, self.veh_num_entry.get() == self.veh_num_ent_txt, self.mile_entry.get() == self.mile_ent_txt, self.tyre_nm_entry.get() == self.tyre_nm_txt]
+        validate_ls = [self.date_entry.get() == self.date_ent_txt, self.activity_entry.get() == self.activity_ent_txt, self.reason_entry.get() == self.reason_ent_txt, self.emp_entry.get() == self.emp_ent_txt, self.veh_num_entry.get() == self.veh_num_ent_txt, self.mile_entry.get() == self.mile_ent_txt, self.tyre_nm_entry.get() == self.tyre_nm_txt]
 
         try:
             evt_date = pd.to_datetime(self.date_entry.get())
@@ -666,7 +672,20 @@ class TrackTyrePage(tk.Frame):
             df = df.append(pd.DataFrame(dlist))
 
             df.to_csv(TRACK_DB, index=False)
+
+            try:
+                self.sel_vehnum_menu.destroy()
+                self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
+                _vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
+                self.sel_vehnum_menu = tk.OptionMenu(self.check_stat_lbf, self._vehnum_tkvar, 'Select Vehicle Type', *_vehnum_values, command=None)
+                self.sel_vehnum_menu.place(anchor='ne', relheight='0.8', relwidth='0.6', relx='0.6', rely='0.1', x='0', y='0')
+            except Exception as e:
+                logger.exception("Error reloading vehicle number choice - {}".format(e))
+
             tkMessageBox.showinfo("Success", "Tyre Event Updated")
+
+            self.clear_vehicle_data()
+            self.clear_tyre_data()
 
     def check_tyre_data(self):
         try:
@@ -683,6 +702,14 @@ class TrackTyrePage(tk.Frame):
         except Exception as e:
             tkMessageBox.showerror("Error", "Please check Vehicle Number selection")
             self.clear_tyre_data()
+
+    def clear_vehicle_data(self):
+        param_dict = {self.date_entry: self.date_ent_txt, self.activity_entry : self.activity_ent_txt, self.reason_entry: self.reason_ent_txt, self.emp_entry: self.emp_ent_txt, self.veh_num_entry: self.veh_num_ent_txt, self.mile_entry: self.mile_ent_txt, self.tyre_nm_entry: self.tyre_nm_txt}
+
+        for ent, txt in param_dict.items():
+            ent.delete(0, "end")
+            ent.insert(0, txt)
+            ent.config(foreground = "grey")
 
     def clear_tyre_data(self):
         for key, ent_field in self.ent_dict.items():
@@ -830,30 +857,33 @@ class TrackInvPage(tk.Frame):
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
     def update_inv_trend(self):
+        try:
+            self.ax.cla()
+            self.update_all_data()
+            df = pd.read_csv(INV_DB).tail(6)
+            df.sort_values("Time", inplace=True)
+            df.set_index("Time", inplace=True)
+            df.plot(kind='bar', ax=self.ax, grid=True)
+            self.ax.tick_params(axis="x", labelrotation=0)
+            self.ax.set_xlabel("Time")
+            self.ax.set_ylabel("Count of Tyres")
+            self.ax.set_title("Tyre Inventory Trend as of {}".format(datetime.now().replace(microsecond=0)))
+            self.fig.canvas.draw()
 
-        self.ax.cla()
-        self.update_all_data()
-        df = pd.read_csv(INV_DB).tail(6)
-        df.sort_values("Time", inplace=True)
-        df.set_index("Time", inplace=True)
-        df.plot(kind='bar', ax=self.ax, grid=True)
-        self.ax.tick_params(axis="x", labelrotation=0)
-        self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Count of Tyres")
-        self.ax.set_title("Tyre Inventory Trend as of {}".format(datetime.now().replace(microsecond=0)))
-        self.fig.canvas.draw()
+            df = df.tail(1)
+            ct = 0
+            for c in df.columns:
+                ct += 1
+                tyre_name_lbl = ttk.Label(self.cur_inv_lbf)
+                tyre_name_lbl.configure(font='{source sans pro} 12 {bold}', justify='right', text='{}: '.format(c))
+                tyre_name_lbl.place(anchor='ne', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
 
-        df = df.tail(1)
-        ct = 0
-        for c in df.columns:
-            ct += 1
-            tyre_name_lbl = ttk.Label(self.cur_inv_lbf)
-            tyre_name_lbl.configure(font='{source sans pro} 12 {bold}', justify='right', text='{}: '.format(c))
-            tyre_name_lbl.place(anchor='ne', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
-
-            tyre_qty_lbl = ttk.Label(self.cur_inv_lbf)
-            tyre_qty_lbl.configure(font='{source sans pro} 12 {}', justify='right', text='{} Qty'.format(df[c].values[0]))
-            tyre_qty_lbl.place(anchor='nw', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
+                tyre_qty_lbl = ttk.Label(self.cur_inv_lbf)
+                tyre_qty_lbl.configure(font='{source sans pro} 12 {}', justify='right', text='{} Qty'.format(df[c].values[0]))
+                tyre_qty_lbl.place(anchor='nw', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
+        except Exception as e:
+            logger.exception("Error Updating inventory - {}".format(e))
+            self.fig.canvas.draw()
 
     def update_all_data(self):
         inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
@@ -895,11 +925,17 @@ class TrackInvPage(tk.Frame):
                 ddict['Total_Cost'] = float(self.total_cost_entry.get())
                 logger.info("Data Extracted - {}".format(ddict))
 
-                df = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
-                df.sort_values("Datetime", inplace=True)
-                df = df.append(pd.DataFrame([ddict]))
-                df.to_csv(INV_IN_DB, index=False)
-                logger.info("Inventory DB updated")
+                try:
+                    df = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
+                    df.sort_values("Datetime", inplace=True)
+                    df = df.append(pd.DataFrame([ddict]))
+                    df.to_csv(INV_IN_DB, index=False)
+                    logger.info("Inventory DB updated")
+                except:
+                    df = pd.DataFrame([ddict])
+                    df.to_csv(INV_IN_DB, index=False)
+                    logger.info("Inventory DB updated")
+
 
                 self.update_inv_trend()
 
@@ -1110,9 +1146,6 @@ class DashboardPage(tk.Frame):
 
     def track_tyre_mileage_per_vehicle_type(self, vehicle_number, vehicle_type):
         '''Track per vehicle tyre replacement mileage'''
-        df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-
-        pv = df[(df['Vehicle_Number'] == vehicle_number) & (df['Vehicle_Type'] == vehicle_type)].pivot_table(values="Vehicle_Mileage", index='Date', columns=['Tyre_Location'], aggfunc='mean')
 
         fig, ax = plt.subplots(tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
@@ -1124,48 +1157,31 @@ class DashboardPage(tk.Frame):
         toolbar.update()
         toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
 
-        pv.diff().plot(ax=ax, grid=True,  title="Mileage Per Tyre for - {}".format(vehicle_number), marker='o')
-        ax.legend(loc="best", ncol=6)
+        try:
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
 
-        # Create custom ticks using matplotlib date tick locator and formatter
-        major_loc = mdates.MonthLocator(interval=6)
-        minor_loc = mdates.MonthLocator(interval=3)
-        ax.xaxis.set_major_locator(major_loc)
-        ax.xaxis.set_minor_locator(minor_loc)
-        fmt = mdates.DateFormatter('%b\n%Y')
-        ax.xaxis.set_major_formatter(fmt)
-        ax.grid('on', which='minor', axis='x')
-        ax.grid('on', which='major', axis='both')
-        ax.tick_params(axis="x", labelrotation=0)
+            pv = df[(df['Vehicle_Number'] == vehicle_number) & (df['Vehicle_Type'] == vehicle_type)].pivot_table(values="Vehicle_Mileage", index='Date', columns=['Tyre_Location'], aggfunc='mean')
+
+            pv.diff().plot(ax=ax, grid=True,  title="Mileage Per Tyre for - {}".format(vehicle_number), marker='o')
+            ax.legend(loc="best", ncol=6)
+
+            # Create custom ticks using matplotlib date tick locator and formatter
+            major_loc = mdates.MonthLocator(interval=6)
+            minor_loc = mdates.MonthLocator(interval=3)
+            ax.xaxis.set_major_locator(major_loc)
+            ax.xaxis.set_minor_locator(minor_loc)
+            fmt = mdates.DateFormatter('%b\n%Y')
+            ax.xaxis.set_major_formatter(fmt)
+            ax.grid('on', which='minor', axis='x')
+            ax.grid('on', which='major', axis='both')
+            ax.tick_params(axis="x", labelrotation=0)
+
+        except Exception as e:
+            logger.exception("Error drawing tyre inventory usage - {}".format(e))
 
         fig.canvas.draw()
 
     def track_inv_tyre_usage(self):
-        trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-        inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
-
-        trk['Date'] = trk['Date'].dt.floor(freq='d')
-        inv['Date'] = inv['Datetime'].dt.floor(freq='d')
-
-        df = inv[['Date','Tyre_Name','Quantity']]
-        df['Type'] = "IN"
-        df['Abs_Qty'] = df['Quantity']
-
-        trk_pv = pd.DataFrame(trk.pivot_table(values='Tyre_Serial', index=['Date','Tyre_Name'], aggfunc='count').to_records())
-        trk_pv['Quantity'] = trk_pv['Tyre_Serial']
-        trk_pv.drop("Tyre_Serial", axis=1, inplace=True)
-        trk_pv['Type'] = "OUT"
-        trk_pv['Abs_Qty'] = trk_pv['Quantity'] * -1
-
-        df = df.append(trk_pv)
-        df.sort_values("Date", inplace=True)
-        df['Year'] = df['Date'].dt.year
-        df['Month'] = df['Date'].dt.month
-        df['Month'] = df['Month'].apply(lambda x: calendar.month_abbr[x])
-
-        pv = df.pivot_table(values='Quantity', index=['Date'], columns=["Type"], aggfunc='sum', fill_value=0)
-
-        cum_pv = df.pivot_table(values='Abs_Qty', index=['Date'], columns=["Tyre_Name"], aggfunc='sum', fill_value=0).cumsum()
 
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
@@ -1177,21 +1193,47 @@ class DashboardPage(tk.Frame):
         toolbar.update()
         toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
 
-        pv.plot(title="Tyre Inventory IN/OUT Quantity", ax = ax1, marker='o')
-        cum_pv.plot(title="Tyre usage trend", ax = ax2, marker='o', color=["r", "k", "c", "m"])
+        try:
+            trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
 
-        for ax in [ax1, ax2]:
-            ax.legend(loc='best')
-            ax.grid('on', which='major', axis='both')
-            ax.tick_params(axis="x", labelrotation=0)
+            trk['Date'] = trk['Date'].dt.floor(freq='d')
+            inv['Date'] = inv['Datetime'].dt.floor(freq='d')
+
+            df = inv[['Date','Tyre_Name','Quantity']]
+            df['Type'] = "IN"
+            df['Abs_Qty'] = df['Quantity']
+
+            trk_pv = pd.DataFrame(trk.pivot_table(values='Tyre_Serial', index=['Date','Tyre_Name'], aggfunc='count').to_records())
+            trk_pv['Quantity'] = trk_pv['Tyre_Serial']
+            trk_pv.drop("Tyre_Serial", axis=1, inplace=True)
+            trk_pv['Type'] = "OUT"
+            trk_pv['Abs_Qty'] = trk_pv['Quantity'] * -1
+
+            df = df.append(trk_pv)
+            df.sort_values("Date", inplace=True)
+            df['Year'] = df['Date'].dt.year
+            df['Month'] = df['Date'].dt.month
+            df['Month'] = df['Month'].apply(lambda x: calendar.month_abbr[x])
+
+            pv = df.pivot_table(values='Quantity', index=['Date'], columns=["Type"], aggfunc='sum', fill_value=0)
+
+            cum_pv = df.pivot_table(values='Abs_Qty', index=['Date'], columns=["Tyre_Name"], aggfunc='sum', fill_value=0).cumsum()
+
+            pv.plot(title="Tyre Inventory IN/OUT Quantity", ax = ax1, marker='o')
+            cum_pv.plot(title="Tyre usage trend", ax = ax2, marker='o', color=["r", "k", "c", "m"])
+
+            for ax in [ax1, ax2]:
+                ax.legend(loc='best')
+                ax.grid('on', which='major', axis='both')
+                ax.tick_params(axis="x", labelrotation=0)
+        except Exception as e:
+            logger.exception("Error drawing tyre inventory usage - {}".format(e))
 
         fig.canvas.draw()
 
     def track_per_vehicle_mileage(self, vehicle_type):
         '''Track per vehicle tyre replacement mileage'''
-        df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-
-        pv = df[df['Vehicle_Type'] == vehicle_type].pivot_table(values="Vehicle_Mileage", index='Vehicle_Number', columns=['Tyre_Location'], aggfunc='mean')
 
         fig, ax = plt.subplots(tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
@@ -1203,11 +1245,19 @@ class DashboardPage(tk.Frame):
         toolbar.update()
         toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
 
-        pv.plot(ax=ax, title="Average Mileage Per {}".format(vehicle_type), marker='o')
-        ax.legend(loc="best", ncol=6)
+        try:
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
 
-        ax.grid('on', which='major', axis='both' )
-        ax.tick_params(axis="x", labelrotation=0)
+            pv = df[df['Vehicle_Type'] == vehicle_type].pivot_table(values="Vehicle_Mileage", index='Vehicle_Number', columns=['Tyre_Location'], aggfunc='mean')
+
+            pv.plot(ax=ax, title="Average Mileage Per {}".format(vehicle_type), marker='o')
+            ax.legend(loc="best", ncol=6)
+
+            ax.grid('on', which='major', axis='both' )
+            ax.tick_params(axis="x", labelrotation=0)
+
+        except Exception as e:
+            logger.exception("Error drawing tyre inventory usage - {}".format(e))
 
         fig.canvas.draw()
 
