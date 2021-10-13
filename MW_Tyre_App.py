@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------#
 #
 # Ident        : MY_Tyre_App.py
-__version__ = "0.0.1 (MVP)"
+__version__ = "1.0.0-alpha"
 __author__ = "Adrian Loo"
 """
 The Tyre App for tracking tyre usage and inventory for Modern Wong
@@ -22,6 +22,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-04: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
 # 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
 # 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
+# 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -57,6 +58,11 @@ from tkinter import ttk
 from tkinter import filedialog as tkFileDialog
 from tkinter import messagebox as tkMessageBox
 from tkinter import simpledialog as tkSimpleDialog
+
+# from PIL import ImageTk, Image
+
+import warnings
+warnings.filterwarnings("ignore")
 
 # ----- Methods ----- #
 
@@ -105,8 +111,7 @@ def create_logger(name, basefile, version, loglevel):
     formatter = logging.Formatter(
         '%(asctime)s\t[%(funcName)s][%(levelname)s]:\t%(message)s')
 
-    file_handler = logging.FileHandler(os.path.join(log_dir, '{}_{}.log'.format(
-        os.path.basename(basefile).split(".")[0], str(datetime.now().date()))))
+    file_handler = logging.FileHandler(os.path.join(log_dir, f'{os.path.basename(basefile).split(".")[0]}_{str(datetime.now().date())}.log'))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
@@ -118,8 +123,7 @@ def create_logger(name, basefile, version, loglevel):
     logger.addHandler(stream_handler)
     logger.info("Logging initialized")
 
-    logger.info(
-        "Running from base file - {}, version: {}".format(os.path.basename(basefile), version))
+    logger.info(f"Running from base file - {os.path.basename(basefile)}, version: {version}")
 
     file_handler.setLevel(loglevel)
 
@@ -146,9 +150,12 @@ class TyreApp(tk.Tk):
             self, "Modern Wong Transport Tyre Inventory and Tracking - {}".format(main_ver))
 
         self.geometry("1220x720+10+10")
+        self.resizable(False, False)  # Change to not resizable to manage image rendering and tk.entry positioning
         self.minsize(1016, 600)
 
         style = ttk.Style(self)
+        logger.info("Themes available - {}".format(style.theme_names()))
+        logger.info("Theme in use - {}".format(style.theme_use()))
         style.configure("TRadiobutton", font=RB_FONT)
         style.configure("TLabelframe.Label", foreground='black', font=LB_FONT)
 
@@ -162,7 +169,7 @@ class TyreApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, TrackTyrePage, TrackInvPage, DashboardPage):
+        for F in (StartPage, TrackInvPage, TrackTyrePage, DashboardPage, ConfigPage):
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -212,12 +219,12 @@ class StartPage(tk.Frame):
         self.track_tyre_lbl = ttk.Label(self)
         self.track_tyre_lbl.configure(
             font='{source sans pro} 18 {bold}', justify='center', text='Track\nTyre')
-        self.track_tyre_lbl.place(anchor='n', relx='0.3', rely='0.3')
+        self.track_tyre_lbl.place(anchor='n', relx='0.5', rely='0.3')
 
         self.track_inv_lbl = ttk.Label(self)
         self.track_inv_lbl.configure(
             font='{source sans pro} 18 {bold}', justify='center', text='Track\nInventory')
-        self.track_inv_lbl.place(anchor='n', relx='0.5', rely='0.3')
+        self.track_inv_lbl.place(anchor='n', relx='0.3', rely='0.3')
 
         self.dashboard_lbl = ttk.Label(self)
         self.dashboard_lbl.configure(
@@ -231,7 +238,7 @@ class StartPage(tk.Frame):
         self.track_tyre_btn.configure(
             image=self.mw_blue_truck_png, text='Track Tyre')
         self.track_tyre_btn.place(
-            anchor='n', height='140', width='140', relx='0.3', rely='0.4')
+            anchor='n', height='140', width='140', relx='0.5', rely='0.435')
 
         self.track_inv_btn = ttk.Button(
             self, command=lambda: controller.show_frame(TrackInvPage))
@@ -240,7 +247,7 @@ class StartPage(tk.Frame):
         self.track_inv_btn.configure(
             image=self.mw_green_truck_png, text='Track Inventory')
         self.track_inv_btn.place(
-            anchor='n', height='140', width='140', relx='0.5', rely='0.4')
+            anchor='n', height='140', width='140', relx='0.3', rely='0.435')
 
         self.launch_db_btn = ttk.Button(
             self, command=lambda: controller.show_frame(DashboardPage))
@@ -249,501 +256,19 @@ class StartPage(tk.Frame):
         self.launch_db_btn.configure(
             image=self.mw_white_truck_png, text='Launch Dashboard')
         self.launch_db_btn.place(
-            anchor='n', height='140', width='140', relx='0.7', rely='0.4')
+            anchor='n', height='140', width='140', relx='0.7', rely='0.435')
+
+        self.settings_btn = ttk.Button(
+            self, command=lambda: controller.show_frame(ConfigPage))
+        self.settings_png = tk.PhotoImage(
+            file=os.path.join(os.getcwd(), "Config", 'settings.png'))
+        self.settings_btn.configure(
+            image=self.settings_png, text='Launch Settings')
+        self.settings_btn.place(
+            anchor='n', height='75', width='75', relx='0.9', rely='0.82')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.5', rely='0.9')
-
-
-class TrackTyrePage(tk.Frame):
-    '''
-    The tyre tracking interface page of the app
-    '''
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
-        self.grid(column='0', row='0', sticky='n')
-
-        self.header_lbl = ttk.Label(self)
-        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
-                                  justify='center', text='Tyre Tracking')
-        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
-
-        self.veh_param_lblf = ttk.Labelframe(self)
-        self.veh_param_lblf.configure(height='200', text='Vehicle Parameters', width='200')
-        self.veh_param_lblf.place(anchor='n', relheight='0.15', relwidth='0.98', relx='0.5', rely='0.06', x='0', y='0')
-
-        self.date_lbl = ttk.Label(self.veh_param_lblf)
-        self.date_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Date: ')
-        self.date_lbl.place(anchor='ne', relx='0.08', rely='0.01', x='0', y='0')
-
-        self.date_entry = ttk.Entry(self.veh_param_lblf)
-        self.date_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.date_ent_txt = '''eg: 2021-10-22'''
-        self.date_entry.delete('0', 'end')
-        self.date_entry.insert('0', self.date_ent_txt)
-        self.date_entry.bind('<FocusIn>', self.on_widget_click)
-        self.date_entry.place(anchor='nw', relx='0.08', x='0', y='0')
-
-        self.activity_lbl = ttk.Label(self.veh_param_lblf)
-        self.activity_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Activity: ')
-        self.activity_lbl.place(anchor='ne', relx='0.08', rely='0.31', x='0', y='0')
-
-        self.activity_entry = ttk.Entry(self.veh_param_lblf)
-        self.activity_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.activity_ent_txt = '''Eg: Tyre Replacement'''
-        self.activity_entry.delete('0', 'end')
-        self.activity_entry.insert('0', self.activity_ent_txt)
-        self.activity_entry.bind('<FocusIn>', self.on_widget_click)
-        self.activity_entry.place(anchor='nw', relx='0.08', rely='0.31', x='0', y='0')
-
-        self.reason_lbl = ttk.Label(self.veh_param_lblf)
-        self.reason_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Reason: ')
-        self.reason_lbl.place(anchor='ne', relx='0.08', rely='0.61', x='0', y='0')
-
-        self.reason_entry = ttk.Entry(self.veh_param_lblf)
-        self.reason_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.reason_ent_txt = '''Eg: worn out'''
-        self.reason_entry.delete('0', 'end')
-        self.reason_entry.insert('0', self.reason_ent_txt)
-        self.reason_entry.bind('<FocusIn>', self.on_widget_click)
-        self.reason_entry.place(anchor='nw', relx='0.08', rely='0.61', x='0', y='0')
-
-        self.emp_lbl = ttk.Label(self.veh_param_lblf)
-        self.emp_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Employee Name: ')
-        self.emp_lbl.place(anchor='ne', relx='0.33', rely='0.01', x='0', y='0')
-
-        self.emp_entry = ttk.Entry(self.veh_param_lblf)
-        self.emp_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.emp_ent_txt = '''eg: Sudin'''
-        self.emp_entry.delete('0', 'end')
-        self.emp_entry.insert('0', self.emp_ent_txt)
-        self.emp_entry.bind('<FocusIn>', self.on_widget_click)
-        self.emp_entry.place(anchor='nw', relx='0.33', x='0', y='0')
-
-        self.veh_num_lbl = ttk.Label(self.veh_param_lblf)
-        self.veh_num_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Vehicle Number: ')
-        self.veh_num_lbl.place(anchor='ne', relx='0.33', rely='0.31', x='0', y='0')
-
-        self.veh_num_entry = ttk.Entry(self.veh_param_lblf)
-        self.veh_num_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.veh_num_ent_txt = '''Eg: JCD2866H'''
-        self.veh_num_entry.delete('0', 'end')
-        self.veh_num_entry.insert('0', self.veh_num_ent_txt)
-        self.veh_num_entry.bind('<FocusIn>', self.on_widget_click)
-        self.veh_num_entry.place(anchor='nw', relx='0.33', rely='0.31', x='0', y='0')
-
-        self.mile_lbl = ttk.Label(self.veh_param_lblf)
-        self.mile_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Vehicle Mileage ')
-        self.mile_lbl.place(anchor='ne', relx='0.33', rely='0.61', x='0', y='0')
-
-        self.mile_entry = ttk.Entry(self.veh_param_lblf)
-        self.mile_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.mile_ent_txt = '''Eg: 23456'''
-        self.mile_entry.delete('0', 'end')
-        self.mile_entry.insert('0', self.mile_ent_txt)
-        self.mile_entry.bind('<FocusIn>', self.on_widget_click)
-        self.mile_entry.place(anchor='nw', relx='0.33', rely='0.61', x='0', y='0')
-
-        self.tyre_nm_lbl = ttk.Label(self.veh_param_lblf)
-        self.tyre_nm_lbl.configure(anchor='n', font='{source sans pro} 11 {}', text='Tyre Name: ')
-        self.tyre_nm_lbl.place(anchor='ne', relx='0.58', rely='0.01', x='0', y='0')
-
-        self.tyre_nm_entry = ttk.Entry(self.veh_param_lblf)
-        self.tyre_nm_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
-        self.tyre_nm_txt = '''eg: AT103A'''
-        self.tyre_nm_entry.delete('0', 'end')
-        self.tyre_nm_entry.insert('0', self.tyre_nm_txt)
-        self.tyre_nm_entry.bind('<FocusIn>', self.on_widget_click)
-        self.tyre_nm_entry.place(anchor='nw', relx='0.58', x='0', y='0')
-
-        self.submit_btn = ttk.Button(self.veh_param_lblf, command=self.submit_tyre_data)
-        self.submit_btn.configure(text='Submit Entry', width='20')
-        self.submit_btn.place(anchor='nw', relheight='0.62', relwidth='0.21', relx='0.51', rely='0.3', x='0', y='0')
-
-        self.check_stat_lbf = ttk.Labelframe(self.veh_param_lblf)
-        self.check_stat_lbf.configure(height='200', text='Serial Number Check', width='200')
-        self.check_stat_lbf.place(anchor='nw', relheight='0.95', relwidth='0.25', relx='0.74', rely='0.0', x='0', y='0')
-
-        self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-        _vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
-        self.sel_vehnum_menu = tk.OptionMenu(self.check_stat_lbf, self._vehnum_tkvar, 'Select Vehicle Type', *_vehnum_values, command=None)
-        self.sel_vehnum_menu.place(anchor='ne', relheight='0.8', relwidth='0.6', relx='0.6', rely='0.1', x='0', y='0')
-
-        self.clear_btn = ttk.Button(self.check_stat_lbf, command=self.clear_tyre_data)
-        self.clear_btn.configure(text='Clear Tyres', width='18')
-        self.clear_btn.place(anchor='nw', relheight='0.4', relwidth='0.4', relx='0.6', rely='0.1', x='0', y='0')
-
-        self.check_btn = ttk.Button(self.check_stat_lbf, command=self.check_tyre_data)
-        self.check_btn.configure(text='Check Tyres', width='18')
-        self.check_btn.place(anchor='sw', relheight='0.4', relwidth='0.4', relx='0.6', rely='0.9', x='0', y='0')
-
-        self.truck_loc_side = ttk.Label(self)
-        self.tyre_loc_side_PNG = tk.PhotoImage(file=os.path.join(os.getcwd(), "Config", 'tyre_loc_side_large.PNG'))
-        self.truck_loc_side.configure(image=self.tyre_loc_side_PNG, text='label16')
-        self.truck_loc_side.place(anchor='n', relx='0.5', rely='0.22', x='0', y='0')
-
-        self.tyre_loc_base = ttk.Label(self)
-        self.tyre_loc_bottom_large_PNG = tk.PhotoImage(file=os.path.join(os.getcwd(), "Config", 'tyre_loc_bottom_large.PNG'))
-        self.tyre_loc_base.configure(image=self.tyre_loc_bottom_large_PNG, text='label16')
-        self.tyre_loc_base.place(anchor='n', relx='0.5', rely='0.65', x='0', y='0')
-
-        self.s1_l_ent = ttk.Entry(self)
-        self.s1_l_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.s1_l_ent.delete('0', 'end')
-        self.s1_l_ent.insert('0', _text_)
-        self.s1_l_ent.bind('<FocusIn>', self.on_widget_click)
-        self.s1_l_ent.place(anchor='n', relwidth='0.07', relx='0.16', rely='0.7', x='0', y='0')
-
-        self.s1_r_ent = ttk.Entry(self)
-        self.s1_r_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.s1_r_ent.delete('0', 'end')
-        self.s1_r_ent.insert('0', _text_)
-        self.s1_r_ent.bind('<FocusIn>', self.on_widget_click)
-        self.s1_r_ent.place(anchor='n', relwidth='0.07', relx='0.16', rely='0.89', x='0', y='0')
-
-        self.d1_l_out_ent = ttk.Entry(self)
-        self.d1_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d1_l_out_ent.delete('0', 'end')
-        self.d1_l_out_ent.insert('0', _text_)
-        self.d1_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d1_l_out_ent.place(anchor='n', relwidth='0.07', relx='0.31', rely='0.7', x='0', y='0')
-
-        self.d1_l_in_ent = ttk.Entry(self)
-        self.d1_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d1_l_in_ent.delete('0', 'end')
-        self.d1_l_in_ent.insert('0', _text_)
-        self.d1_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d1_l_in_ent.place(anchor='n', relwidth='0.07', relx='0.31', rely='0.73', x='0', y='0')
-
-        self.d2_l_out_ent = ttk.Entry(self)
-        self.d2_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d2_l_out_ent.delete('0', 'end')
-        self.d2_l_out_ent.insert('0', _text_)
-        self.d2_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d2_l_out_ent.place(anchor='n', relwidth='0.07', relx='0.38', rely='0.7', x='0', y='0')
-
-        self.d2_l_in_ent = ttk.Entry(self)
-        self.d2_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d2_l_in_ent.delete('0', 'end')
-        self.d2_l_in_ent.insert('0', _text_)
-        self.d2_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d2_l_in_ent.place(anchor='n', relwidth='0.07', relx='0.38', rely='0.73', x='0', y='0')
-
-        self.d1_r_in_ent = ttk.Entry(self)
-        self.d1_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d1_r_in_ent.delete('0', 'end')
-        self.d1_r_in_ent.insert('0', _text_)
-        self.d1_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d1_r_in_ent.place(anchor='n', relwidth='0.07', relx='0.31', rely='0.86', x='0', y='0')
-
-        self.d1_r_out_ent = ttk.Entry(self)
-        self.d1_r_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d1_r_out_ent.delete('0', 'end')
-        self.d1_r_out_ent.insert('0', _text_)
-        self.d1_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d1_r_out_ent.place(anchor='n', relwidth='0.07', relx='0.31', rely='0.89', x='0', y='0')
-
-        self.d2_r_in_ent = ttk.Entry(self)
-        self.d2_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d2_r_in_ent.delete('0', 'end')
-        self.d2_r_in_ent.insert('0', _text_)
-        self.d2_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d2_r_in_ent.place(anchor='n', relwidth='0.07', relx='0.38', rely='0.86', x='0', y='0')
-
-        self.d2_r_out_ent = ttk.Entry(self)
-        self.d2_r_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.d2_r_out_ent.delete('0', 'end')
-        self.d2_r_out_ent.insert('0', _text_)
-        self.d2_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.d2_r_out_ent.place(anchor='n', relwidth='0.07', relx='0.38', rely='0.89', x='0', y='0')
-
-        self.ta1_l_out_ent = ttk.Entry(self)
-        self.ta1_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta1_l_out_ent.delete('0', 'end')
-        self.ta1_l_out_ent.insert('0', _text_)
-        self.ta1_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta1_l_out_ent.place(anchor='n', relwidth='0.07', relx='0.57', rely='0.7', x='0', y='0')
-
-        self.ta1_l_in_ent = ttk.Entry(self)
-        self.ta1_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta1_l_in_ent.delete('0', 'end')
-        self.ta1_l_in_ent.insert('0', _text_)
-        self.ta1_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta1_l_in_ent.place(anchor='n', relwidth='0.07', relx='0.57', rely='0.73', x='0', y='0')
-
-        self.ta1_r_in_ent = ttk.Entry(self)
-        self.ta1_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta1_r_in_ent.delete('0', 'end')
-        self.ta1_r_in_ent.insert('0', _text_)
-        self.ta1_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta1_r_in_ent.place(anchor='n', relwidth='0.07', relx='0.57', rely='0.86', x='0', y='0')
-
-        self.ta1_r_out_ent = ttk.Entry(self)
-        self.ta1_r_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta1_r_out_ent.delete('0', 'end')
-        self.ta1_r_out_ent.insert('0', _text_)
-        self.ta1_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta1_r_out_ent.place(anchor='n', relwidth='0.07', relx='0.57', rely='0.89', x='0', y='0')
-
-        self.ta2_l_out_ent = ttk.Entry(self)
-        self.ta2_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta2_l_out_ent.delete('0', 'end')
-        self.ta2_l_out_ent.insert('0', _text_)
-        self.ta2_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta2_l_out_ent.place(anchor='n', relwidth='0.07', relx='0.645', rely='0.7', x='0', y='0')
-
-        self.ta2_l_in_ent = ttk.Entry(self)
-        self.ta2_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta2_l_in_ent.delete('0', 'end')
-        self.ta2_l_in_ent.insert('0', _text_)
-        self.ta2_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta2_l_in_ent.place(anchor='n', relwidth='0.07', relx='.645', rely='0.73', x='0', y='0')
-
-        self.ta2_r_in_ent = ttk.Entry(self)
-        self.ta2_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta2_r_in_ent.delete('0', 'end')
-        self.ta2_r_in_ent.insert('0', _text_)
-        self.ta2_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta2_r_in_ent.place(anchor='n', relwidth='0.07', relx='.645', rely='0.86', x='0', y='0')
-
-        self.ta2_r_out_ent = ttk.Entry(self)
-        self.ta2_r_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta2_r_out_ent.delete('0', 'end')
-        self.ta2_r_out_ent.insert('0', _text_)
-        self.ta2_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta2_r_out_ent.place(anchor='n', relwidth='0.07', relx='.645', rely='0.89', x='0', y='0')
-
-        self.ta3_l_out_ent = ttk.Entry(self)
-        self.ta3_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta3_l_out_ent.delete('0', 'end')
-        self.ta3_l_out_ent.insert('0', _text_)
-        self.ta3_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta3_l_out_ent.place(anchor='n', relwidth='0.07', relx='.724', rely='0.7', x='0', y='0')
-
-        self.ta3_l_in_ent = ttk.Entry(self)
-        self.ta3_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta3_l_in_ent.delete('0', 'end')
-        self.ta3_l_in_ent.insert('0', _text_)
-        self.ta3_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta3_l_in_ent.place(anchor='n', relwidth='0.07', relx='.724', rely='0.73', x='0', y='0')
-
-        self.ta3_r_in_ent = ttk.Entry(self)
-        self.ta3_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta3_r_in_ent.delete('0', 'end')
-        self.ta3_r_in_ent.insert('0', _text_)
-        self.ta3_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta3_r_in_ent.place(anchor='n', relwidth='0.07', relx='.724', rely='0.86', x='0', y='0')
-
-        self.ta3_r_out_ent = ttk.Entry(self)
-        self.ta3_r_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta3_r_out_ent.delete('0', 'end')
-        self.ta3_r_out_ent.insert('0', _text_)
-        self.ta3_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta3_r_out_ent.place(anchor='n', relwidth='0.07', relx='.724', rely='0.89', x='0', y='0')
-
-        self.ta4_l_out_ent = ttk.Entry(self)
-        self.ta4_l_out_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta4_l_out_ent.delete('0', 'end')
-        self.ta4_l_out_ent.insert('0', _text_)
-        self.ta4_l_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta4_l_out_ent.place(anchor='n', relwidth='0.07', relx='.8', rely='0.7', x='0', y='0')
-
-        self.ta4_l_in_ent = ttk.Entry(self)
-        self.ta4_l_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta4_l_in_ent.delete('0', 'end')
-        self.ta4_l_in_ent.insert('0', _text_)
-        self.ta4_l_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta4_l_in_ent.place(anchor='n', relwidth='0.07', relx='.8', rely='0.73', x='0', y='0')
-
-        self.ta4_r_in_ent = ttk.Entry(self)
-        self.ta4_r_in_ent.configure(foreground='grey', justify='center')
-        _text_ = '''Enter S/N'''
-        self.ta4_r_in_ent.delete('0', 'end')
-        self.ta4_r_in_ent.insert('0', _text_)
-        self.ta4_r_in_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta4_r_in_ent.place(anchor='n', relwidth='0.07', relx='.8', rely='0.86', x='0', y='0')
-
-        self.ta4_r_out_ent = ttk.Entry(self)
-        self.ta4_r_out_ent.configure(foreground='grey', justify='center')
-        self.tyre_ent_text_ = '''Enter S/N'''
-        self.ta4_r_out_ent.delete('0', 'end')
-        self.ta4_r_out_ent.insert('0', self.tyre_ent_text_)
-        self.ta4_r_out_ent.bind('<FocusIn>', self.on_widget_click)
-        self.ta4_r_out_ent.place(anchor='n', relwidth='0.07', relx='.8', rely='0.89', x='0', y='0')
-
-        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
-        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
-
-        self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
-        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
-
-        ent_ls = [self.s1_l_ent, self.s1_r_ent, self.d1_l_in_ent, self.d1_l_out_ent, self.d2_l_in_ent, self.d2_l_out_ent, self.d1_r_in_ent, self.d1_r_out_ent, self.d2_r_in_ent, self.d2_r_out_ent, self.ta1_l_in_ent, self.ta1_l_out_ent, self.ta2_l_in_ent, self.ta2_l_out_ent, self.ta3_l_in_ent, self.ta3_l_out_ent, self.ta4_l_in_ent, self.ta4_l_out_ent, self.ta1_r_in_ent, self.ta1_r_out_ent, self.ta2_r_in_ent, self.ta2_r_out_ent, self.ta3_r_in_ent, self.ta3_r_out_ent, self.ta4_r_in_ent, self.ta4_r_out_ent]
-
-        var_ls = ['s1_l', 's1_r', 'd1_l_in', 'd1_l_out', 'd2_l_in', 'd2_l_out', 'd1_r_in', 'd1_r_out', 'd2_r_in', 'd2_r_out', 'ta1_l_in', 'ta1_l_out', 'ta2_l_in', 'ta2_l_out', 'ta3_l_in', 'ta3_l_out', 'ta4_l_in', 'ta4_l_out', 'ta1_r_in', 'ta1_r_out', 'ta2_r_in', 'ta2_r_out', 'ta3_r_in', 'ta3_r_out', 'ta4_r_in', 'ta4_r_out']
-
-        self.ent_dict = {}
-        for i in var_ls:
-            self.ent_dict[i] = ent_ls[var_ls.index(i)]
-
-        self.widget_entry = {}
-
-    def submit_tyre_data(self):
-
-        if tkMessageBox.askyesno("Confirm?", "Are you sure you want to save data?\nYou cannot undo this action."):
-            pass
-        else:
-            return
-
-        # Validate Parameters Entry
-        validate_ls = [self.date_entry.get() == self.date_ent_txt, self.activity_entry.get() == self.activity_ent_txt, self.reason_entry.get() == self.reason_ent_txt, self.emp_entry.get() == self.emp_ent_txt, self.veh_num_entry.get() == self.veh_num_ent_txt, self.mile_entry.get() == self.mile_ent_txt, self.tyre_nm_entry.get() == self.tyre_nm_txt]
-
-        try:
-            evt_date = pd.to_datetime(self.date_entry.get())
-            logger.info("Event Date is valid - {}".format(evt_date))
-        except Exception as e:
-            logger.exception("Error when checking time - {}".format(e))
-            tkMessageBox.showerror("Error", "Date input error, please check again")
-            return
-
-        try:
-            evt_mile = int(self.mile_entry.get())
-            logger.info("Event Mileage is valid - {}".format(evt_mile))
-        except Exception as e:
-            logger.exception("Error when checking mileage - {}".format(e))
-            tkMessageBox.showerror("Error", "Mileage input error, please check again")
-            return
-
-        dlist = []
-        if any(validate_ls):
-            tkMessageBox.showwarning("Warning", "Some Fields not entered")
-            return
-        else:
-            logger.info("All Entry is valid - {}".format(validate_ls))
-            for k, v in self.ent_dict.items():
-                if v.get() == self.tyre_ent_text_:
-                    pass
-                else:
-                    try:
-                        ddict = {}
-                        ddict['Date'] = evt_date
-                        ddict['Activity'] = self.activity_entry.get()
-                        ddict['Reason'] = self.reason_entry.get()
-                        ddict['Employee_Name'] = self.emp_entry.get()
-                        ddict['Tyre_Name'] = self.tyre_nm_entry.get()
-                        ddict['Tyre_Serial'] = v.get()
-                        ddict['Vehicle_Number'] = self.veh_num_entry.get()
-                        ddict['Vehicle_Type'] = "Trailer" if k[0] == "t" else "Truck"
-                        ddict['Vehicle_Mileage'] = evt_mile
-                        ddict['Tyre_Location'] = k.upper()
-                        ddict['Tyre_Size'] = "295/80R22.5"
-                        dlist.append(ddict)
-                        logger.info("Appended - {}".format(ddict))
-                    except Exception as e:
-                        logger.exception("Error appending input - {}".format(e))
-                        tkMessageBox.showerror("Error", "Error appending input. Please contact developer.")
-
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-            df = df.append(pd.DataFrame(dlist))
-
-            df.to_csv(TRACK_DB, index=False)
-
-            try:
-                self.sel_vehnum_menu.destroy()
-                self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-                _vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
-                self.sel_vehnum_menu = tk.OptionMenu(self.check_stat_lbf, self._vehnum_tkvar, 'Select Vehicle Type', *_vehnum_values, command=None)
-                self.sel_vehnum_menu.place(anchor='ne', relheight='0.8', relwidth='0.6', relx='0.6', rely='0.1', x='0', y='0')
-            except Exception as e:
-                logger.exception("Error reloading vehicle number choice - {}".format(e))
-
-            tkMessageBox.showinfo("Success", "Tyre Event Updated")
-
-            self.clear_vehicle_data()
-            self.clear_tyre_data()
-
-    def check_tyre_data(self):
-        try:
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-            df = df[df['Vehicle_Number'] == self._vehnum_tkvar.get()]
-            df = df[df['Date'] == df['Date'].max()]
-            df.reset_index(drop=True, inplace=True)
-
-            for i in range(0, len(df)):
-                ent_field = self.ent_dict[df.loc[i, 'Tyre_Location'].lower().replace("-","_")]
-                ent_field.delete(0, "end")
-                ent_field.insert(0, df.loc[i, "Tyre_Serial"])
-                ent_field.config(foreground = "blue")
-        except Exception as e:
-            tkMessageBox.showerror("Error", "Please check Vehicle Number selection")
-            self.clear_tyre_data()
-
-    def clear_vehicle_data(self):
-        param_dict = {self.date_entry: self.date_ent_txt, self.activity_entry : self.activity_ent_txt, self.reason_entry: self.reason_ent_txt, self.emp_entry: self.emp_ent_txt, self.veh_num_entry: self.veh_num_ent_txt, self.mile_entry: self.mile_ent_txt, self.tyre_nm_entry: self.tyre_nm_txt}
-
-        for ent, txt in param_dict.items():
-            ent.delete(0, "end")
-            ent.insert(0, txt)
-            ent.config(foreground = "grey")
-
-    def clear_tyre_data(self):
-        for key, ent_field in self.ent_dict.items():
-            ent_field.delete(0, "end")
-            ent_field.insert(0, self.tyre_ent_text_)
-            ent_field.config(foreground = "grey")
-
-    def on_widget_click(self, evt):
-        self.widget = self.focus_get()
-        logger.info("{} is in focus".format(self.widget))
-        if self.widget in self.widget_entry.keys():
-            self.widget_data = self.widget_entry[self.widget]
-            if self.widget.get() == self.widget_entry[self.widget]:
-                self.clear_entry_field()
-            else:
-                logger.info("Widget [{}] has user data - {}".format(self.widget))
-        else:
-            logger.info("Widget [{}] has no user data.".format(self.widget))
-            self.widget_data = self.widget.get()
-            self.widget_entry[self.widget] = self.widget_data
-            self.clear_entry_field()
-
-    def clear_entry_field(self):
-        logger.info("Clearing Entry Field for user input")
-        self.widget.delete(0, "end")
-        self.widget.insert(0, '')
-        self.widget.config(foreground = 'black')
-        self.widget.bind('<FocusOut>', self.on_widget_focusout)
-
-    def on_widget_focusout(self, evt):
-        if self.widget.get() == '':
-            logger.info("Widget [{}] is empty - Returning original placeholder".format(self.widget))
-            self.widget.insert(0, self.widget_data)
-            self.widget.config(foreground = 'grey')
 
 
 class TrackInvPage(tk.Frame):
@@ -804,7 +329,7 @@ class TrackInvPage(tk.Frame):
 
         self.total_cost_lbl = ttk.Label(self.inv_input_lbf)
         self.total_cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Total Cost ({}): '.format(self.currency))
-        self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.4', x='0', y='0')
+        self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.435', x='0', y='0')
 
         self.tyre_name_entry = ttk.Entry(self.inv_input_lbf)
         self.tyre_name_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
@@ -840,7 +365,7 @@ class TrackInvPage(tk.Frame):
         self.total_cost_entry.delete('0', 'end')
         self.total_cost_entry.insert('0', self.total_cost_text_)
         self.total_cost_entry['state'] = 'readonly'
-        self.total_cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.4', x='0', y='0')
+        self.total_cost_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.435', x='0', y='0')
 
         self.submit_btn = ttk.Button(self.inv_input_lbf, command=self.submit_entry)
         self.submit_btn.configure(text='Submit Entry')
@@ -850,8 +375,14 @@ class TrackInvPage(tk.Frame):
         self.download_btn.configure(text='Download Inventory Data')
         self.download_btn.place(anchor='n', relheight='0.1', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
 
-        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
+
+        self.tyre_btn = ttk.Button(self, text="Track Tyre", width=20, command=lambda: controller.show_frame(TrackTyrePage))
+        self.tyre_btn.place(anchor='n', relx='0.37', rely='0.95')
+
+        self.dash_btn = ttk.Button(self, text="Dashboard", width=20, command=lambda: controller.show_frame(DashboardPage))
+        self.dash_btn.place(anchor='n', relx='0.64', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
@@ -882,7 +413,7 @@ class TrackInvPage(tk.Frame):
                 tyre_qty_lbl.configure(font='{source sans pro} 12 {}', justify='right', text='{} Qty'.format(df[c].values[0]))
                 tyre_qty_lbl.place(anchor='nw', relx='0.4', rely='0.{}'.format(ct*18), x='0', y='0')
         except Exception as e:
-            logger.exception("Error Updating inventory - {}".format(e))
+            logger.exception(f"Error Updating inventory - {e}")
             self.fig.canvas.draw()
 
     def update_all_data(self):
@@ -951,22 +482,31 @@ class TrackInvPage(tk.Frame):
 
     def download_inv_data(self):
         exp_dir = tkFileDialog.askdirectory()
-        try:
-            shutil.copy(INV_IN_DB, os.path.join(exp_dir, INV_IN_FILE_NAME))
-        except IOError as io:
-            logger.exception("Error copying {} - {}".format(INV_IN_DB, e))
 
-        try:
-            shutil.copy(INV_DB, os.path.join(exp_dir, INV_FILE_NAME))
-        except IOError as io:
-            logger.exception("Error copying {} - {}".format(INV_DB, e))
+        if os.path.isdir(exp_dir):
+            logger.info(f"Export directory - [{exp_dir}]")
+            try:
+                shutil.copy(INV_IN_DB, os.path.join(exp_dir, INV_IN_FILE_NAME))
+            except IOError as io:
+                logger.exception(f"Error copying {INV_IN_DB} - {e}")
 
-        if all([os.path.isfile(os.path.join(exp_dir, INV_IN_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, INV_FILE_NAME))]):
-            tkMessageBox.showinfo("Success", "File export Success")
+            try:
+                shutil.copy(INV_DB, os.path.join(exp_dir, INV_FILE_NAME))
+            except IOError as io:
+                logger.exception(f"Error copying {INV_DB} - {e}")
+
+            if all([os.path.isfile(os.path.join(exp_dir, INV_IN_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, INV_FILE_NAME))]):
+                tkMessageBox.showinfo("Success", "File export Success")
+            else:
+                path1 = os.path.join(exp_dir, INV_IN_FILE_NAME)
+                path1_st = os.path.isfile(path1)
+                path2 = os.path.join(exp_dir, INV_FILE_NAME)
+                path2_st = os.path.isfile(path2)
+                err_msg = f"File export error! - Path: {path1} is {path1_st}, Path {path2} is {path2_st}"
+                logger.error(err_msg)
+                tkMessageBox.showerror("Error", err_msg)
         else:
-            err_msg = "File export error! - Path: {} is {}, Path {} is {}".format(os.path.join(exp_dir, INV_IN_FILE_NAME), os.path.isfile(os.path.join(exp_dir, INV_IN_FILE_NAME)), os.path.join(exp_dir, INV_FILE_NAME), os.path.isfile(os.path.join(exp_dir, INV_FILE_NAME)))
-            logger.error(err_msg)
-            tkMessageBox.showerror("Error", err_msg)
+            logger.error(f"Directory not selected, download operation skipped - {exp_dir}")
 
     def clear_entries(self, entry_box, entry_text):
         entry_box.delete(0, "end")
@@ -1040,9 +580,552 @@ class TrackInvPage(tk.Frame):
             total_cost_txt = str(total_cost)
         except Exception as e:
             total_cost_txt = "Error - {}".format(e)
-            logger.exception("Error on calculating total cost - {}".format(e))
+            logger.exception(f"Error on calculating total cost - {e}")
 
         self.update_total_cost_entry(total_cost_txt)
+
+
+class TrackTyrePage(tk.Frame):
+    '''
+    The tyre tracking interface page of the app
+    '''
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
+        self.grid(column='0', row='0', sticky='n')
+
+        self.header_lbl = ttk.Label(self)
+        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
+                                  justify='center', text='Tyre Tracking')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
+
+        # --- Start View Labelframe --- #
+        self.view_lbf = ttk.Labelframe(self)
+
+        self.view_vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
+        self.view_vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique() # to do generate vehicle list from configuration table
+        self.view_vehnum_opt = tk.OptionMenu(self.view_lbf, self.view_vehnum_tkvar, 'Select Vehicle Number', *self.view_vehnum_values, command=None)
+        self.view_vehnum_opt.place(anchor='ne', relheight='0.5', relwidth='0.5', relx='0.52', rely='0.02', x='0', y='0')
+
+        self.view_clr_btn = ttk.Button(self.view_lbf, command=self.clear_tyre_data)
+        self.view_clr_btn.configure(text='Clear Display')
+        self.view_clr_btn.place(anchor='ne', relwidth='0.5', relx='0.52', rely='0.6', x='0', y='0')
+
+        self.view_chk_btn = ttk.Button(self.view_lbf, command=self.check_tyre_data)
+        self.view_chk_btn.configure(text='Display Record')
+        self.view_chk_btn.place(anchor='nw', relheight='0.5', relwidth='0.42', relx='0.55', rely='0.02', x='0', y='0')
+
+        self.view_dl_btn = ttk.Button(self.view_lbf, command=self.download_tyre_data)
+        self.view_dl_btn.configure(text='Download Record')
+        self.view_dl_btn.place(anchor='nw', relwidth='0.42', relx='0.55', rely='0.6', x='0', y='0')
+
+        self.view_lbf.configure(height='200', text='View Tyres', width='200')
+        self.view_lbf.place(anchor='n', relheight='0.15', relwidth='0.28', relx='0.15', rely='0.06', x='0', y='0')
+        # --- End View Labelframe --- #
+
+        # --- Start Update Labelframe --- #
+        self.update_lbf = ttk.Labelframe(self)
+
+        self.update_date_lbl = ttk.Label(self.update_lbf)
+        self.update_date_lbl.configure(font='{source sans pro} 11 {}', text='Date: ')
+        self.update_date_lbl.place(anchor='ne', relx='0.08', rely='0.01', x='0', y='0')
+
+        self.update_act_lbl = ttk.Label(self.update_lbf)
+        self.update_act_lbl.configure(font='{source sans pro} 11 {}', text='Activity: ')
+        self.update_act_lbl.place(anchor='ne', relx='0.08', rely='0.31', x='0', y='0')
+
+        self.update_reason_lbl = ttk.Label(self.update_lbf)
+        self.update_reason_lbl.configure(font='{source sans pro} 11 {}', text='Reason: ')
+        self.update_reason_lbl.place(anchor='ne', relx='0.08', rely='0.61', x='0', y='0')
+
+        self.update_clr_btn = ttk.Button(self.update_lbf, command=self.clear_vehicle_tyre_data)
+        self.update_clr_btn.configure(text='Clear Entry')
+        self.update_clr_btn.place(anchor='ne', relheight='0.55', relwidth='0.1', relx='0.76', rely='0.31', x='0', y='0')
+
+        self.date_entry = ttk.Entry(self.update_lbf)
+        self.date_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.date_ent_txt = '''Eg: 2021-10-22'''
+        self.date_entry.delete('0', 'end')
+        self.date_entry.insert('0', self.date_ent_txt)
+        self.date_entry.bind('<FocusIn>', self.on_widget_click)
+        self.date_entry.place(anchor='nw', relwidth='0.18', relx='0.08', x='0', y='0')
+
+        self.activity_tkvar = tk.StringVar(value='Select Activity')
+        self.activity_values = ['Tyre Replacement', 'Wheel Replacement']
+        self.activity_opt = tk.OptionMenu(self.update_lbf, self.activity_tkvar, 'Select Activity', *self.activity_values, command=None)
+        self.activity_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.08', rely='0.28', x='0', y='0')
+
+        self.reason_entry = ttk.Entry(self.update_lbf)
+        self.reason_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.reason_ent_txt = '''Eg: Tyre Worn Out'''
+        self.reason_entry.delete('0', 'end')
+        self.reason_entry.insert('0', self.reason_ent_txt)
+        self.reason_entry.bind('<FocusIn>', self.on_widget_click)
+        self.reason_entry.place(anchor='nw', relwidth='0.18', relx='0.08', rely='0.61', x='0', y='0')
+
+        self.update_emp_lbl = ttk.Label(self.update_lbf)
+        self.update_emp_lbl.configure(font='{source sans pro} 11 {}', text='Employee Name: ')
+        self.update_emp_lbl.place(anchor='ne', relx='0.42', x='0', y='0')
+
+        self.update_vehnum_lbl = ttk.Label(self.update_lbf)
+        self.update_vehnum_lbl.configure(font='{source sans pro} 11 {}', text='Vehicle Number: ')
+        self.update_vehnum_lbl.place(anchor='ne', relx='0.42', rely='0.31', x='0', y='0')
+
+        self.update_mile_lbl = ttk.Label(self.update_lbf)
+        self.update_mile_lbl.configure(font='{source sans pro} 11 {}', text='Vehicle Mileage: ')
+        self.update_mile_lbl.place(anchor='ne', relx='0.42', rely='0.61', x='0', y='0')
+
+        self.emp_tkvar = tk.StringVar(value='Select Employee')
+        self.emp_values = ['Adrian', 'Shyong', 'Sudin'] # To do lookup config for list for emp names
+        self.empname_opt = tk.OptionMenu(self.update_lbf, self.emp_tkvar, 'Select Employee', *self.emp_values, command=None)
+        self.empname_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.42', rely='-0.02', x='0', y='0')
+
+        self.vehnum_tkvar = tk.StringVar(value='Select Vehicle')
+        self.vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique() # To do lookup config for list of veh numbers
+        self.vehnum_opt = tk.OptionMenu(self.update_lbf, self.vehnum_tkvar, 'Select Vehicle', *self.vehnum_values, command=None)
+        self.vehnum_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.42', rely='0.28', x='0', y='0')
+
+        self.mile_entry = ttk.Entry(self.update_lbf)
+        self.mile_entry.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.mile_ent_txt = '''Eg: 23456'''
+        self.mile_entry.delete('0', 'end')
+        self.mile_entry.insert('0', self.mile_ent_txt)
+        self.mile_entry.bind('<FocusIn>', self.on_widget_click)
+        self.mile_entry.place(anchor='nw', relwidth='0.18', relx='0.42', rely='0.61', x='0', y='0')
+
+        self.tyrename_lbl = ttk.Label(self.update_lbf)
+        self.tyrename_lbl.configure(font='{source sans pro} 11 {}', text='Tyre Name: ')
+        self.tyrename_lbl.place(anchor='ne', relx='0.76', x='0', y='0')
+
+        self.tyrename_tkvar = tk.StringVar(value='Select Tyre Name')
+        self.tyrename_values = ['x', 'y', 'z'] # to do lookup config for list of tyre names
+        self.tyrename_opt = tk.OptionMenu(self.update_lbf, self.tyrename_tkvar, 'Select Tyre Name', *self.tyrename_values, command=None)
+        self.tyrename_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.76', rely='-0.02', x='0', y='0')
+
+        self.update_submit_btn = ttk.Button(self.update_lbf)
+        self.update_submit_btn.configure(text='Submit Entry')
+        self.update_submit_btn.place(anchor='nw', relheight='0.55', relwidth='0.17', relx='0.765', rely='0.31', x='0', y='0')
+
+        self.update_lbf.configure(height='200', text='Update Tyres', width='200')
+        self.update_lbf.place(anchor='n', relheight='0.15', relwidth='0.69', relx='0.64', rely='0.06', x='0', y='0')
+        # --- End Update Labelframe --- #
+
+        # --- Start Display Labelframe --- #
+        self.display_lbf = ttk.Labelframe(self)
+        self.display_lbf.configure(height='200', labelanchor='n', text='Display Frame', width='200')
+        self.display_lbf.place(anchor='n', relheight='0.7', relwidth='0.98', relx='0.5', rely='0.22', x='0', y='0')
+
+        #loc_img = Image.open(os.path.join(os.getcwd(), "Config", "tyre_location.png"))
+        self.tyreloc_lbl = ttk.Label(self.display_lbf)
+        self.tyre_locations_png = tk.PhotoImage(file=os.path.join(os.getcwd(), "Config", "tyre_locations.png"))
+        self.tyreloc_lbl.configure(image=self.tyre_locations_png, text='tyre location')
+        self.tyreloc_lbl.pack(side='top')
+
+        self.side_view_lbl = ttk.Label(self.display_lbf)
+        self.side_view_lbl.configure(font='{source sans pro} 11 {bold}', text='Side View')
+        self.side_view_lbl.place(anchor='n', relx='0.5', rely='0.28', x='0', y='0')
+
+        self.bottom_view_lbl = ttk.Label(self.display_lbf)
+        self.bottom_view_lbl.configure(font='{source sans pro} 11 {bold}', text='Bottom View')
+        self.bottom_view_lbl.place(anchor='n', relx='0.5', rely='0.93', x='0', y='0')
+
+        self.tyre_ent_text_ = '''Enter S/N'''
+
+        self.s1_l_ent = ttk.Entry(self.display_lbf)
+        self.s1_l_ent.configure(foreground='grey', justify='center')
+        self.s1_l_ent.delete('0', 'end')
+        self.s1_l_ent.insert('0', self.tyre_ent_text_)
+        self.s1_l_ent.bind('<FocusIn>', self.on_widget_click)
+        self.s1_l_ent.place(anchor='n', relwidth='0.065', relx='0.095', rely='0.435', x='0', y='0')
+
+        self.s1_r_ent = ttk.Entry(self.display_lbf)
+        self.s1_r_ent.configure(foreground='grey', justify='center')
+        self.s1_r_ent.delete('0', 'end')
+        self.s1_r_ent.insert('0', self.tyre_ent_text_)
+        self.s1_r_ent.bind('<FocusIn>', self.on_widget_click)
+        self.s1_r_ent.place(anchor='n', relwidth='0.065', relx='0.095', rely='0.851', x='0', y='0')
+
+        self.d1_l_out_ent = ttk.Entry(self.display_lbf)
+        self.d1_l_out_ent.configure(foreground='grey', justify='center')
+        self.d1_l_out_ent.delete('0', 'end')
+        self.d1_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.d1_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d1_l_out_ent.place(anchor='n', relwidth='0.065', relx='0.3', rely='0.435', x='0', y='0')
+
+        self.d1_l_in_ent = ttk.Entry(self.display_lbf)
+        self.d1_l_in_ent.configure(foreground='grey', justify='center')
+        self.d1_l_in_ent.delete('0', 'end')
+        self.d1_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.d1_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d1_l_in_ent.place(anchor='n', relwidth='0.065', relx='0.3', rely='0.495', x='0', y='0')
+
+        self.d1_r_in_ent = ttk.Entry(self.display_lbf)
+        self.d1_r_in_ent.configure(foreground='grey', justify='center')
+        self.d1_r_in_ent.delete('0', 'end')
+        self.d1_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.d1_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d1_r_in_ent.place(anchor='n', relwidth='0.065', relx='0.3', rely='0.791', x='0', y='0')
+
+        self.d1_r_out_ent = ttk.Entry(self.display_lbf)
+        self.d1_r_out_ent.configure(foreground='grey', justify='center')
+        self.d1_r_out_ent.delete('0', 'end')
+        self.d1_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.d1_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d1_r_out_ent.place(anchor='n', relwidth='0.065', relx='0.3', rely='0.851', x='0', y='0')
+
+        self.d2_l_out_ent = ttk.Entry(self.display_lbf)
+        self.d2_l_out_ent.configure(foreground='grey', justify='center')
+        self.d2_l_out_ent.delete('0', 'end')
+        self.d2_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.d2_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d2_l_out_ent.place(anchor='n', relwidth='0.065', relx='0.38', rely='0.435', x='0', y='0')
+
+        self.d2_l_in_ent = ttk.Entry(self.display_lbf)
+        self.d2_l_in_ent.configure(foreground='grey', justify='center')
+        self.d2_l_in_ent.delete('0', 'end')
+        self.d2_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.d2_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d2_l_in_ent.place(anchor='n', relwidth='0.065', relx='0.38', rely='0.495', x='0', y='0')
+
+        self.d2_r_in_ent = ttk.Entry(self.display_lbf)
+        self.d2_r_in_ent.configure(foreground='grey', justify='center')
+        self.d2_r_in_ent.delete('0', 'end')
+        self.d2_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.d2_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d2_r_in_ent.place(anchor='n', relwidth='0.065', relx='0.38', rely='0.791', x='0', y='0')
+
+        self.d2_r_out_ent = ttk.Entry(self.display_lbf)
+        self.d2_r_out_ent.configure(foreground='grey', justify='center')
+        self.d2_r_out_ent.delete('0', 'end')
+        self.d2_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.d2_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.d2_r_out_ent.place(anchor='n', relwidth='0.065', relx='0.38', rely='0.851', x='0', y='0')
+
+        self.ta1_l_out_ent = ttk.Entry(self.display_lbf)
+        self.ta1_l_out_ent.configure(foreground='grey', justify='center')
+        self.ta1_l_out_ent.delete('0', 'end')
+        self.ta1_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta1_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta1_l_out_ent.place(anchor='n', relwidth='0.065', relx='.669', rely='0.435', x='0', y='0')
+
+        self.ta1_l_in_ent = ttk.Entry(self.display_lbf)
+        self.ta1_l_in_ent.configure(foreground='grey', justify='center')
+        self.ta1_l_in_ent.delete('0', 'end')
+        self.ta1_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta1_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta1_l_in_ent.place(anchor='n', relwidth='0.065', relx='.669', rely='0.495', x='0', y='0')
+
+        self.ta1_r_in_ent = ttk.Entry(self.display_lbf)
+        self.ta1_r_in_ent.configure(foreground='grey', justify='center')
+        self.ta1_r_in_ent.delete('0', 'end')
+        self.ta1_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta1_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta1_r_in_ent.place(anchor='n', relwidth='0.065', relx='.669', rely='0.791', x='0', y='0')
+
+        self.ta1_r_out_ent = ttk.Entry(self.display_lbf)
+        self.ta1_r_out_ent.configure(foreground='grey', justify='center')
+        self.ta1_r_out_ent.delete('0', 'end')
+        self.ta1_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta1_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta1_r_out_ent.place(anchor='n', relwidth='0.065', relx='.669', rely='0.851', x='0', y='0')
+
+        self.ta2_l_out_ent = ttk.Entry(self.display_lbf)
+        self.ta2_l_out_ent.configure(foreground='grey', justify='center')
+        self.ta2_l_out_ent.delete('0', 'end')
+        self.ta2_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta2_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta2_l_out_ent.place(anchor='n', relwidth='0.065', relx='.741', rely='0.435', x='0', y='0')
+
+        self.ta2_l_in_ent = ttk.Entry(self.display_lbf)
+        self.ta2_l_in_ent.configure(foreground='grey', justify='center')
+        self.ta2_l_in_ent.delete('0', 'end')
+        self.ta2_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta2_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta2_l_in_ent.place(anchor='n', relwidth='0.065', relx='.741', rely='0.495', x='0', y='0')
+
+        self.ta2_r_in_ent = ttk.Entry(self.display_lbf)
+        self.ta2_r_in_ent.configure(foreground='grey', justify='center')
+        self.ta2_r_in_ent.delete('0', 'end')
+        self.ta2_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta2_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta2_r_in_ent.place(anchor='n', relwidth='0.065', relx='.741', rely='0.791', x='0', y='0')
+
+        self.ta2_r_out_ent = ttk.Entry(self.display_lbf)
+        self.ta2_r_out_ent.configure(foreground='grey', justify='center')
+        self.ta2_r_out_ent.delete('0', 'end')
+        self.ta2_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta2_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta2_r_out_ent.place(anchor='n', relwidth='0.065', relx='.741', rely='0.851', x='0', y='0')
+
+        self.ta3_l_out_ent = ttk.Entry(self.display_lbf)
+        self.ta3_l_out_ent.configure(foreground='grey', justify='center')
+        self.ta3_l_out_ent.delete('0', 'end')
+        self.ta3_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta3_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta3_l_out_ent.place(anchor='n', relwidth='0.065', relx='.813', rely='0.435', x='0', y='0')
+
+        self.ta3_l_in_ent = ttk.Entry(self.display_lbf)
+        self.ta3_l_in_ent.configure(foreground='grey', justify='center')
+        self.ta3_l_in_ent.delete('0', 'end')
+        self.ta3_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta3_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta3_l_in_ent.place(anchor='n', relwidth='0.065', relx='.813', rely='0.495', x='0', y='0')
+
+        self.ta3_r_in_ent = ttk.Entry(self.display_lbf)
+        self.ta3_r_in_ent.configure(foreground='grey', justify='center')
+        self.ta3_r_in_ent.delete('0', 'end')
+        self.ta3_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta3_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta3_r_in_ent.place(anchor='n', relwidth='0.065', relx='.813', rely='0.791', x='0', y='0')
+
+        self.ta3_r_out_ent = ttk.Entry(self.display_lbf)
+        self.ta3_r_out_ent.configure(foreground='grey', justify='center')
+        self.ta3_r_out_ent.delete('0', 'end')
+        self.ta3_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta3_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta3_r_out_ent.place(anchor='n', relwidth='0.065', relx='.813', rely='0.851', x='0', y='0')
+
+        self.ta4_l_out_ent = ttk.Entry(self.display_lbf)
+        self.ta4_l_out_ent.configure(foreground='grey', justify='center')
+        self.ta4_l_out_ent.delete('0', 'end')
+        self.ta4_l_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta4_l_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta4_l_out_ent.place(anchor='n', relwidth='0.065', relx='0.885', rely='0.435', x='0', y='0')
+
+        self.ta4_l_in_ent = ttk.Entry(self.display_lbf)
+        self.ta4_l_in_ent.configure(foreground='grey', justify='center')
+        self.ta4_l_in_ent.delete('0', 'end')
+        self.ta4_l_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta4_l_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta4_l_in_ent.place(anchor='n', relwidth='0.065', relx='0.885', rely='0.495', x='0', y='0')
+
+        self.ta4_r_in_ent = ttk.Entry(self.display_lbf)
+        self.ta4_r_in_ent.configure(foreground='grey', justify='center')
+        self.ta4_r_in_ent.delete('0', 'end')
+        self.ta4_r_in_ent.insert('0', self.tyre_ent_text_)
+        self.ta4_r_in_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta4_r_in_ent.place(anchor='n', relwidth='0.065', relx='0.885', rely='0.791', x='0', y='0')
+
+        self.ta4_r_out_ent = ttk.Entry(self.display_lbf)
+        self.ta4_r_out_ent.configure(foreground='grey', justify='center')
+        self.ta4_r_out_ent.delete('0', 'end')
+        self.ta4_r_out_ent.insert('0', self.tyre_ent_text_)
+        self.ta4_r_out_ent.bind('<FocusIn>', self.on_widget_click)
+        self.ta4_r_out_ent.place(anchor='n', relwidth='0.065', relx='0.885', rely='0.851', x='0', y='0')
+
+        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
+
+        self.inv_btn = ttk.Button(self, text="Track Inventory", width=20, command=lambda: controller.show_frame(TrackInvPage))
+        self.inv_btn.place(anchor='n', relx='0.37', rely='0.95')
+
+        self.dash_btn = ttk.Button(self, text="Dashboard", width=20, command=lambda: controller.show_frame(DashboardPage))
+        self.dash_btn.place(anchor='n', relx='0.64', rely='0.95')
+
+        self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
+        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
+
+        ent_ls = [self.s1_l_ent, self.s1_r_ent, self.d1_l_in_ent, self.d1_l_out_ent, self.d2_l_in_ent, self.d2_l_out_ent, self.d1_r_in_ent, self.d1_r_out_ent, self.d2_r_in_ent, self.d2_r_out_ent, self.ta1_l_in_ent, self.ta1_l_out_ent, self.ta2_l_in_ent, self.ta2_l_out_ent, self.ta3_l_in_ent, self.ta3_l_out_ent, self.ta4_l_in_ent, self.ta4_l_out_ent, self.ta1_r_in_ent, self.ta1_r_out_ent, self.ta2_r_in_ent, self.ta2_r_out_ent, self.ta3_r_in_ent, self.ta3_r_out_ent, self.ta4_r_in_ent, self.ta4_r_out_ent]
+
+        var_ls = ['s1_l', 's1_r', 'd1_l_in', 'd1_l_out', 'd2_l_in', 'd2_l_out', 'd1_r_in', 'd1_r_out', 'd2_r_in', 'd2_r_out', 'ta1_l_in', 'ta1_l_out', 'ta2_l_in', 'ta2_l_out', 'ta3_l_in', 'ta3_l_out', 'ta4_l_in', 'ta4_l_out', 'ta1_r_in', 'ta1_r_out', 'ta2_r_in', 'ta2_r_out', 'ta3_r_in', 'ta3_r_out', 'ta4_r_in', 'ta4_r_out']
+
+        self.ent_dict = {}
+        for i in var_ls:
+            self.ent_dict[i] = ent_ls[var_ls.index(i)]
+
+        self.widget_entry = {}
+
+        self.default_entries = {self.date_entry: self.date_ent_txt, self.reason_entry: self.reason_ent_txt, self.mile_entry: self.mile_ent_txt}
+
+        self.default_options = [self.activity_tkvar, self.emp_tkvar, self.vehnum_tkvar, self.tyrename_tkvar]
+        self.default_options_values = ["Select Activity", "Select Employee", "Select Vehicle", "Select Tyre Name"]
+
+        self.page_clear = True
+
+    def submit_tyre_data(self):
+
+        if tkMessageBox.askyesno("Confirm?", "Are you sure you want to save data?\nYou cannot undo this action."):
+            pass
+        else:
+            return
+
+        # Validate Parameters Entry
+        validate_ls = [self.date_entry.get() == self.date_ent_txt, self.activity_tkvar.get() == "Select Activity", self.reason_entry.get() == self.reason_ent_txt, self.emp_tkvar.get() == "Select Employee", self.vehnum_tkvar.get() == "Select Vehicle", self.mile_entry.get() == self.mile_ent_txt, self.tyrename_tkvar.get() == "Select Tyre Name"]
+
+        try:
+            evt_date = pd.to_datetime(self.date_entry.get())
+            logger.info(f"Event Date is valid - {evt_date}")
+        except Exception as e:
+            logger.exception(f"Error when checking time - {e}")
+            tkMessageBox.showerror("Error", "Date input error, please check again")
+            return
+
+        try:
+            evt_mile = int(self.mile_entry.get())
+            logger.info(f"Event Mileage is valid - {evt_mile}")
+        except Exception as e:
+            logger.exception(f"Error when checking mileage - {e}")
+            tkMessageBox.showerror("Error", "Mileage input error, please check again")
+            return
+
+        dlist = []
+        if any(validate_ls):
+            tkMessageBox.showwarning("Warning", "Some Fields not entered")
+            return
+        else:
+            logger.info(f"All Entry is valid - {validate_ls}")
+            for k, v in self.ent_dict.items():
+                if v.get() == self.tyre_ent_text_:
+                    pass
+                else:
+                    try:
+                        ddict = {}
+                        ddict['Date'] = evt_date
+                        ddict['Activity'] = self.activity_tkvar.get()
+                        ddict['Reason'] = self.reason_entry.get()
+                        ddict['Employee_Name'] = self.emp_tkvar.get()
+                        ddict['Tyre_Name'] = self.tyrename_tkvar.get()
+                        ddict['Tyre_Serial'] = v.get()
+                        ddict['Vehicle_Number'] = self.vehnum_tkvar.get()
+                        ddict['Vehicle_Type'] = "Trailer" if k[0] == "t" else "Truck"
+                        ddict['Vehicle_Mileage'] = evt_mile
+                        ddict['Tyre_Location'] = k.upper().replace("_","-")
+                        ddict['Tyre_Size'] = "295/80R22.5"
+                        dlist.append(ddict)
+                        logger.info(f"Appended - {ddict}")
+                    except Exception as e:
+                        logger.exception(f"Error appending input - {e}")
+                        tkMessageBox.showerror("Error", "Error appending input. Please contact developer.")
+
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = df.append(pd.DataFrame(dlist))
+
+            df.to_csv(TRACK_DB, index=False)
+
+            tkMessageBox.showinfo("Success", "Tyre Event Updated")
+
+            self.clear_vehicle_tyre_data()
+
+    def check_tyre_data(self):
+        try:
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = df[df['Vehicle_Number'] == self.view_vehnum_tkvar.get()]
+            df.reset_index(drop=True, inplace=True)
+
+            self.view_veh_lbl = ttk.Label(self.display_lbf)
+            self.view_veh_lbl.configure(background="#4D6073", foreground='white', font='{Source Sans Pro} 11 {bold} {underline}',
+                                      justify='center', text='Vehicle Information')
+            self.view_veh_lbl.place(anchor='n', relx='0.52', rely='0.58')
+
+            mileage = df[df['Date'] == df['Date'].max()]['Vehicle_Mileage'].max()
+            last_mod = df['Date'].max().date()
+
+            self.view_veh_info_lbl = ttk.Label(self.display_lbf)
+            self.view_veh_info_lbl.configure(background="#4D6073", foreground='white', font='{Source Sans Pro} 11 {}', justify='center', text=f"Vehicle Number: {self.view_vehnum_tkvar.get()}\nVehicle Mileage: {mileage}km\nLast Modified: {last_mod}")
+            self.view_veh_info_lbl.place(anchor='n', relx='0.52', rely='0.63')
+
+            for loc in df['Tyre_Location'].unique():
+                sdf = df[df['Tyre_Location'] == loc]
+                sdf = sdf[sdf['Date'] == sdf['Date'].max()]
+                serial = sdf['Tyre_Serial'].values[0]
+                ent_field = self.ent_dict[loc.lower().replace("-","_")]
+                ent_field.delete(0, "end")
+                ent_field.insert(0, serial)
+                ent_field.config(foreground = "blue")
+
+            self.page_clear = False
+
+        except Exception as e:
+            tkMessageBox.showerror("Error", "Please check Vehicle Number selection")
+            self.clear_tyre_data()
+
+    def clear_vehicle_tyre_data(self):
+        self.clear_vehicle_data()
+        self.clear_tyre_data()
+
+    def clear_vehicle_data(self):
+        try:
+            for ent, txt in self.default_entries.items():
+                ent.delete(0, "end")
+                ent.insert(0, txt)
+                ent.config(foreground = "grey")
+        except Exception as e:
+            logger.exception(f"Error clearing vehicle entries - {ent}, {txt} - {e}")
+
+        try:
+            for i in range(0, len(self.default_options)):
+                self.default_options[i].set(self.default_options_values[i])
+        except Exception as e:
+            logger.exception(f"Error clearing options - {opt}, {var} - {e}")
+
+    def clear_tyre_data(self):
+        try:
+            self.view_veh_lbl.destroy()
+            self.view_veh_info_lbl.destroy()
+        except Exception as e:
+            logger.exception(f"Error destroying view labels - {e}")
+
+        for key, ent_field in self.ent_dict.items():
+            ent_field.delete(0, "end")
+            ent_field.insert(0, self.tyre_ent_text_)
+            ent_field.config(foreground = "grey")
+
+    def download_tyre_data(self):
+        exp_dir = tkFileDialog.askdirectory()
+
+        if os.path.isdir(exp_dir):
+            logger.info(f"Export directory - [{exp_dir}]")
+            try:
+                shutil.copy(TRACK_DB, os.path.join(exp_dir, TRACK_FILE_NAME))
+            except IOError as io:
+                logger.exception(f"Error copying {TRACK_DB} - {e}")
+
+            if all([os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME))]):
+                tkMessageBox.showinfo("Success", "File export Success")
+            else:
+                err_msg = "File export error! - Path: {} is {}".format(os.path.join(exp_dir, TRACK_FILE_NAME), os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME)))
+                logger.error(err_msg)
+                tkMessageBox.showerror("Error", err_msg)
+        else:
+            logger.error(f"Directory not selected, download operation skipped - {exp_dir}")
+
+    def on_widget_click(self, evt):
+        self.widget = self.focus_get()
+        logger.info(f"{self.widget} is in focus")
+        if self.page_clear:
+            if self.widget in self.widget_entry.keys():
+                self.widget_data = self.widget_entry[self.widget]
+                if self.widget.get() == self.widget_entry[self.widget]:
+                    self.clear_entry_field()
+                else:
+                    logger.info(f"Widget [{self.widget}] has user data - {self.widget.get()}")
+            else:
+                logger.info(f"Widget [{self.widget}] has no user data.")
+                self.widget_data = self.widget.get()
+                self.widget_entry[self.widget] = self.widget_data
+                self.clear_entry_field()
+        else:
+            self.update_clr_btn.focus_set()
+            if tkMessageBox.askyesno("Attention", "The display port has data.\nWould you like to clear it?"):
+                self.clear_tyre_data()
+                self.page_clear = True
+                self.widget.focus_set()
+            else:
+                tkMessageBox.showwarning("Warning", "You need to clear the display port before entering new data")
+
+    def clear_entry_field(self):
+        logger.info("Clearing Entry Field for user input")
+        self.widget.delete(0, "end")
+        self.widget.insert(0, '')
+        self.widget.config(foreground = 'black')
+        self.widget.bind('<FocusOut>', self.on_widget_focusout)
+
+    def on_widget_focusout(self, evt):
+        if self.widget.get() == '':
+            logger.info("Widget [{}] is empty - Returning original placeholder".format(self.widget))
+            self.widget.insert(0, self.widget_data)
+            self.widget.config(foreground = 'grey')
 
 
 class DashboardPage(tk.Frame):
@@ -1091,11 +1174,17 @@ class DashboardPage(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
         toolbar.config(background='white')
         toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
+        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
         self.track_inv_tyre_usage()
 
-        self.back_btn = ttk.Button(self, text="Back", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
+
+        self.inv_btn = ttk.Button(self, text="Track Inventory", width=20, command=lambda: controller.show_frame(TrackInvPage))
+        self.inv_btn.place(anchor='n', relx='0.37', rely='0.95')
+
+        self.tyre_btn = ttk.Button(self, text="Track Tyre", width=20, command=lambda: controller.show_frame(TrackTyrePage))
+        self.tyre_btn.place(anchor='n', relx='0.64', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
@@ -1155,7 +1244,7 @@ class DashboardPage(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
         toolbar.config(background='white')
         toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
+        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
 
         try:
             df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
@@ -1177,7 +1266,7 @@ class DashboardPage(tk.Frame):
             ax.tick_params(axis="x", labelrotation=0)
 
         except Exception as e:
-            logger.exception("Error drawing tyre inventory usage - {}".format(e))
+            logger.exception(f"Error drawing tyre inventory usage - {e}")
 
         fig.canvas.draw()
 
@@ -1191,7 +1280,7 @@ class DashboardPage(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
         toolbar.config(background='white')
         toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
+        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
 
         try:
             trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
@@ -1228,7 +1317,7 @@ class DashboardPage(tk.Frame):
                 ax.grid('on', which='major', axis='both')
                 ax.tick_params(axis="x", labelrotation=0)
         except Exception as e:
-            logger.exception("Error drawing tyre inventory usage - {}".format(e))
+            logger.exception(f"Error drawing tyre inventory usage - {e}")
 
         fig.canvas.draw()
 
@@ -1243,7 +1332,7 @@ class DashboardPage(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
         toolbar.config(background='white')
         toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.89')
+        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
 
         try:
             df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
@@ -1257,10 +1346,35 @@ class DashboardPage(tk.Frame):
             ax.tick_params(axis="x", labelrotation=0)
 
         except Exception as e:
-            logger.exception("Error drawing tyre inventory usage - {}".format(e))
+            logger.exception(f"Error drawing tyre inventory usage - {e}")
 
         fig.canvas.draw()
 
+
+class ConfigPage(tk.Frame):
+    '''
+    The configuration page of the app
+    '''
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
+        self.grid(column='0', row='0', sticky='n')
+
+        self.header_lbl = ttk.Label(self)
+        self.header_lbl.configure(font='{Source Sans Pro} 20 {bold}',
+                                  justify='center', text='Configuration')
+        self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
+
+        # --- Functions here
+
+
+
+        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
+
+        self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
+        self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
 # ----- Execution ----- #
 
