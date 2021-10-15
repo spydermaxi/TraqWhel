@@ -23,6 +23,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
 # 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
 # 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
+# 2021-10-15: 1.1.0-alpha [Adrian Loo] Complete ConfigPage UI design
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -1366,9 +1367,144 @@ class ConfigPage(tk.Frame):
                                   justify='center', text='Configuration')
         self.header_lbl.place(anchor='n', relx='0.5', rely='0.01')
 
-        # --- Functions here
+        # --- Vehicle Profile Section --- #
+        self.veh_profile_lbf = ttk.Labelframe(self)
+        self.veh_profile_lbf.configure(height='200', text='Vehicle Profile', width='200')
+        self.veh_profile_lbf.place(anchor='n', relheight='0.2', relwidth='0.41', relx='0.215', rely='0.06', x='0', y='0')
 
+        self.cfg_truck_num_lbl = ttk.Label(self.veh_profile_lbf)
+        self.cfg_truck_num_lbl.configure(font='{source sans pro} 11 {bold}', text='Truck Number: ')
+        self.cfg_truck_num_lbl.place(anchor='ne', relx='0.3', rely='0.05', x='0', y='0')
 
+        self.cfg_truck_num_ent = ttk.Entry(self.veh_profile_lbf)
+        self.cfg_truck_num_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_truck_num_text = '''Eg: JAB2866T'''
+        self.cfg_truck_num_ent.delete('0', 'end')
+        self.cfg_truck_num_ent.insert('0', self.cfg_truck_num_text)
+        self.cfg_truck_num_ent.place(anchor='nw', relx='0.3', rely='0.05', x='0', y='0')
+
+        self.cfg_trailer_num_lbl = ttk.Label(self.veh_profile_lbf)
+        self.cfg_trailer_num_lbl.configure(font='{source sans pro} 11 {bold}', text='Trailer Number: ')
+        self.cfg_trailer_num_lbl.place(anchor='ne', relx='0.3', rely='0.35', x='0', y='0')
+
+        self.cfg_trailer_num_ent = ttk.Entry(self.veh_profile_lbf)
+        self.cfg_trailer_num_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_trailer_num_text = '''Eg: JAB2866T'''
+        self.cfg_trailer_num_ent.delete('0', 'end')
+        self.cfg_trailer_num_ent.insert('0', self.cfg_trailer_num_text)
+        self.cfg_trailer_num_ent.place(anchor='nw', relx='0.3', rely='0.35', x='0', y='0')
+
+        self.cfg_veh_submit_btn = ttk.Button(self.veh_profile_lbf, command=None)
+        self.cfg_veh_submit_btn.configure(text='Submit Vehicle Profile')
+        self.cfg_veh_submit_btn.place(anchor='n', relx='0.5', rely='0.65', x='0', y='0')
+
+        self.cfg_veh_load_btn = ttk.Button(self.veh_profile_lbf, command=None)
+        self.cfg_veh_load_btn.configure(text='Load Existing\nVehicle Data')
+        self.cfg_veh_load_btn.place(anchor='ne', relheight='0.8', relwidth='0.2', relx='0.95', rely='0.05', x='0', y='0')
+
+        # --- Tyre Profile Section --- #
+        self.tyre_profile_lbf = ttk.Labelframe(self)
+        self.tyre_profile_lbf.configure(height='200', text='Tyre Profile', width='200')
+        self.tyre_profile_lbf.place(anchor='n', relheight='0.5', relwidth='0.2', relx='0.11', rely='0.27', x='0', y='0')
+
+        self.cfg_tyre_brand_lbl = ttk.Label(self.tyre_profile_lbf)
+        self.cfg_tyre_brand_lbl.configure(font='{source sans pro} 11 {bold}', text='Brand: ')
+        self.cfg_tyre_brand_lbl.place(anchor='ne', relx='0.35', rely='0.05', x='0', y='0')
+
+        self.cfg_tyre_brand_ent = ttk.Entry(self.tyre_profile_lbf)
+        self.cfg_tyre_brand_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_tyre_brand_text = '''Eg: Austone'''
+        self.cfg_tyre_brand_ent.delete('0', 'end')
+        self.cfg_tyre_brand_ent.insert('0', self.cfg_tyre_brand_text)
+        self.cfg_tyre_brand_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.05', x='0', y='0')
+
+        self.cfg_tyre_name_lbl = ttk.Label(self.tyre_profile_lbf)
+        self.cfg_tyre_name_lbl.configure(font='{source sans pro} 11 {bold}', text='Product: ')
+        self.cfg_tyre_name_lbl.place(anchor='ne', relx='0.35', rely='0.15', x='0', y='0')
+
+        self.cfg_tyre_name_ent = ttk.Entry(self.tyre_profile_lbf)
+        self.cfg_tyre_name_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_tyre_name_text = '''Eg: AT1023'''
+        self.cfg_tyre_name_ent.delete('0', 'end')
+        self.cfg_tyre_name_ent.insert('0', self.cfg_tyre_name_text)
+        self.cfg_tyre_name_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.15', x='0', y='0')
+
+        self.cfg_tyre_size_lbl = ttk.Label(self.tyre_profile_lbf)
+        self.cfg_tyre_size_lbl.configure(font='{source sans pro} 11 {bold}', text='Size: ')
+        self.cfg_tyre_size_lbl.place(anchor='ne', relx='0.35', rely='0.25', x='0', y='0')
+
+        self.cfg_tyre_size_ent = ttk.Entry(self.tyre_profile_lbf)
+        self.cfg_tyre_size_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_tyre_size_text = '''Eg: 295/80R22.5'''
+        self.cfg_tyre_size_ent.delete('0', 'end')
+        self.cfg_tyre_size_ent.insert('0', self.cfg_tyre_size_text)
+        self.cfg_tyre_size_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.25', x='0', y='0')
+
+        self.cfg_tyre_submit_btn = ttk.Button(self.tyre_profile_lbf, command=None)
+        self.cfg_tyre_submit_btn.configure(text='Submit Tyre Profile')
+        self.cfg_tyre_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
+
+        self.cfg_tyre_load_btn = ttk.Button(self.tyre_profile_lbf, command=None)
+        self.cfg_tyre_load_btn.configure(text='Load Existing\nTyre Data')
+        self.cfg_tyre_load_btn.place(anchor='n', relheight='0.2', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
+
+        # --- Employee profile section --- #
+        self.emp_profile_lbf = ttk.Labelframe(self)
+        self.emp_profile_lbf.configure(height='200', text='Employee Profile', width='200')
+        self.emp_profile_lbf.place(anchor='n', relheight='0.5', relwidth='0.2', relx='0.32', rely='0.27', x='0', y='0')
+
+        self.cfg_emp_name_lbl = ttk.Label(self.emp_profile_lbf)
+        self.cfg_emp_name_lbl.configure(font='{source sans pro} 11 {bold}', text='Name: ')
+        self.cfg_emp_name_lbl.place(anchor='ne', relx='0.35', rely='0.05', x='0', y='0')
+
+        self.cfg_emp_name_ent = ttk.Entry(self.emp_profile_lbf)
+        self.cfg_emp_name_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_emp_name_text = '''Eg: Sudin'''
+        self.cfg_emp_name_ent.delete('0', 'end')
+        self.cfg_emp_name_ent.insert('0', self.cfg_emp_name_text)
+        self.cfg_emp_name_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.05', x='0', y='0')
+
+        self.cfg_emp_contact_lbl = ttk.Label(self.emp_profile_lbf)
+        self.cfg_emp_contact_lbl.configure(font='{source sans pro} 11 {bold}', text='Contact: ')
+        self.cfg_emp_contact_lbl.place(anchor='ne', relx='0.35', rely='0.15', x='0', y='0')
+
+        self.cfg_emp_contact_ent = ttk.Entry(self.emp_profile_lbf)
+        self.cfg_emp_contact_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_emp_contact_text = '''Eg: +60123456789'''
+        self.cfg_emp_contact_ent.delete('0', 'end')
+        self.cfg_emp_contact_ent.insert('0', self.cfg_emp_contact_text)
+        self.cfg_emp_contact_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.15', x='0', y='0')
+
+        self.cfg_emp_submit_btn = ttk.Button(self.emp_profile_lbf, command=None)
+        self.cfg_emp_submit_btn.configure(text='Submit Employee Profile')
+        self.cfg_emp_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
+
+        self.cfg_emp_load_btn = ttk.Button(self.emp_profile_lbf, command=None)
+        self.cfg_emp_load_btn.configure(text='Load Existing\nEmployee Data')
+        self.cfg_emp_load_btn.place(anchor='n', relheight='0.2', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
+
+        # --- App Settings Section --- #
+        self.app_settings_lbf = ttk.Labelframe(self)
+        self.app_settings_lbf.configure(height='200', text='App Settings', width='200')
+        self.app_settings_lbf.place(anchor='n', relheight='0.15', relwidth='0.41', relx='0.215', rely='0.775', x='0', y='0')
+
+        self.cfg_currency_lbl = ttk.Label(self.app_settings_lbf)
+        self.cfg_currency_lbl.configure(font='{source sans pro} 11 {bold}', text='Currency: ')
+        self.cfg_currency_lbl.place(anchor='ne', relx='0.2', rely='0.1', x='0', y='0')
+
+        self.currency_tkvar = tk.StringVar(value='RM')
+        self.currency_values = ['RM', 'SGD']
+        self.cfg_currency_opt = tk.OptionMenu(self.app_settings_lbf, self.currency_tkvar, 'RM', *self.currency_values, command=None)
+        self.cfg_currency_opt.place(anchor='nw', relwidth='0.15', relx='0.2', rely='0.05', x='0', y='0')
+
+        self.cfg_setting_save_btn = ttk.Button(self.app_settings_lbf, command=None)
+        self.cfg_setting_save_btn.configure(text='Save Settings')
+        self.cfg_setting_save_btn.place(anchor='se', relwidth='0.2', relx='0.95', rely='0.8', x='0', y='0')
+
+        # --- Display Port --- #
+        self.display_port_lbf = ttk.Labelframe(self)
+        self.display_port_lbf.configure(height='200', labelanchor='n', text='Display Port', width='200')
+        self.display_port_lbf.place(anchor='n', relheight='0.865', relwidth='0.56', relx='0.71', rely='0.06', x='0', y='0')
 
         self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
