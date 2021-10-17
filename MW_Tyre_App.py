@@ -23,7 +23,8 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
 # 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
 # 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
-# 2021-10-15: 1.1.0-alpha [Adrian Loo] Complete ConfigPage UI design
+# 2021-10-15: 1.0.0-alpha [Adrian Loo] Complete ConfigPage UI design
+# 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -60,7 +61,8 @@ from tkinter import filedialog as tkFileDialog
 from tkinter import messagebox as tkMessageBox
 from tkinter import simpledialog as tkSimpleDialog
 
-# from PIL import ImageTk, Image
+from xml.etree import ElementTree as ET
+from xml.dom import minidom
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -70,6 +72,9 @@ warnings.filterwarnings("ignore")
 LARGE_FONT = ("Verdana", 12, "bold")
 LB_FONT = ("Verdana", 11, "bold")
 RB_FONT = ("Verdana", 10)
+
+CONFIG_SOURCE = os.path.join(os.getcwd(), "Config")
+CONFIG_FILE = os.path.join(CONFIG_SOURCE, "systemconfig.xml")
 
 DATA_SOURCE = os.path.join(os.getcwd(), "Data")
 
@@ -1394,7 +1399,7 @@ class ConfigPage(tk.Frame):
         self.cfg_trailer_num_ent.insert('0', self.cfg_trailer_num_text)
         self.cfg_trailer_num_ent.place(anchor='nw', relx='0.3', rely='0.35', x='0', y='0')
 
-        self.cfg_veh_submit_btn = ttk.Button(self.veh_profile_lbf, command=None)
+        self.cfg_veh_submit_btn = ttk.Button(self.veh_profile_lbf, command=self.update_vehicle)
         self.cfg_veh_submit_btn.configure(text='Submit Vehicle Profile')
         self.cfg_veh_submit_btn.place(anchor='n', relx='0.5', rely='0.65', x='0', y='0')
 
@@ -1511,6 +1516,68 @@ class ConfigPage(tk.Frame):
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
+
+    def create_config(self):
+        '''create defaut configuration file'''
+        root = minidom.Document()
+
+        system = root.createElement('System')
+        root.appendChild(system)
+
+        elements = ['App','Vehicle','Tyre','Employee']
+
+        for element in elements:
+            elementChild = root.createElement(element)
+            if element == "App":
+                subElement = root.createElement("AppSettings")
+                subElement.setAttribute("Current", "RM")
+                elementChild.appendChild(subElement)
+            system.appendChild(elementChild)
+
+        xml_str = root.toprettyxml(indent ="\t")
+        with open(CONFIG_FILE, "w") as f:
+            f.write(xml_str)
+
+    def clear_vehicle_profile_ent(self):
+        for wg, txt in {self.cfg_truck_num_ent: self.cfg_truck_num_text, self.cfg_trailer_num_ent: self.cfg_trailer_num_text}.items():
+            wg.delete(0, "end")
+            wg.insert(0, txt)
+            wg.config(foreground = "grey")
+
+    def update_vehicle(self):
+        '''Updates Vehicle Profile to systemconfig.xml file'''
+        attrib = {"Truck_num": self.cfg_truck_num_ent.get(), "Trailer_num": self.cfg_trailer_num_ent.get()}
+        logger.info(f"User input: [{attrib}]")
+
+        if os.path.isfile(CONFIG_FILE):
+            logger.info(f"Config file exists, proceed with update - {CONFIG_FILE}")
+            pass
+        else:
+            logger.warning("Config file not exists, proceed to create")
+            self.create_config()
+
+        if tkMessageBox.askyesno("Confirm?", f"Truck Number: {attrib['Truck_num']}\nTrailer Number: {attrib['Trailer_num']}\nDo you want to proceed?"):
+            logger.info("User proceed")
+
+            tree = ET.parse(CONFIG_FILE)
+            root = tree.getroot()
+            for i in root:
+                if i.tag == 'Vehicle':
+                    ET.SubElement(i, "VehicleProfile", attrib)
+                    dom = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml'))
+                else:
+                    pass
+
+            with open(CONFIG_FILE, 'w') as fw:
+                fw.writelines(line + "\n" for line in dom.toprettyxml().split("\n") if not line.strip() == "")
+            logger.info(f"Data written into configuration - [{attrib}]")
+        else:
+            logger.info("User aborted")
+            pass
+
+        self.clear_vehicle_profile_ent()
+
+
 
 # ----- Execution ----- #
 
