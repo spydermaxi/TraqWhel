@@ -3,5 +3,6 @@ _Reference/
 _Scratch/
 build/
 dist/
+.DS_Store
 *.spec
 *.log

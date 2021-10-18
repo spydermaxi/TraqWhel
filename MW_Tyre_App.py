@@ -25,6 +25,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
 # 2021-10-15: 1.0.0-alpha [Adrian Loo] Complete ConfigPage UI design
 # 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
+# 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -181,9 +182,66 @@ class TyreApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.start_frame(StartPage)
+        # Validate if configuration has entries
+        if os.path.isfile(CONFIG_FILE):
+            if self.check_config_profiles():
+                logger.info("Loading Start page")
+                self.start_frame(StartPage)
+            else:
+                logger.info("Loading Configuration page")
+                self.start_frame(ConfigPage)
+        else:
+            logger.info("No Configuration file found, creating default configuration file")
+            self.create_config()
+            logger.info("Loading Configuration page")
+            tkMessageBox.showinfo("Information", "Welcome to ModernWong Transport Tyre Tracking App.\n\nTo start using the app, please fill in the profiles for the following:\n1. Vehicles - enter your fleet numbers\n2. Tyre - Enter the information for the tyres you have in stock\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
+            self.start_frame(ConfigPage)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
+
+    def check_config_profiles(self):
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        profiles = []
+        for i in root:
+            if i.tag != "App":
+                prof_entries = len(i.findall(f"{i.tag}Profile"))
+                logger.info(f"{i.tag}Profile has {prof_entries} entries")
+                if prof_entries >= 1:
+                    profiles.append(1)
+                else:
+                    profiles.append(0)
+            else:
+                pass
+
+        if all(profiles):
+            logger.info("All profiles have entries")
+            return True
+        else:
+            logger.info("Some Profile(s) have no entry")
+            return False
+
+    def create_config(self):
+        '''create defaut configuration file'''
+        root = minidom.Document()
+
+        system = root.createElement('System')
+        root.appendChild(system)
+
+        elements = ['App','Vehicle','Tyre','Employee']
+
+        for element in elements:
+            elementChild = root.createElement(element)
+            if element == "App":
+                subElement = root.createElement("AppSettings")
+                subElement.setAttribute("Current", "RM")
+                elementChild.appendChild(subElement)
+            system.appendChild(elementChild)
+
+        xml_str = root.toprettyxml(indent ="\t")
+        with open(CONFIG_FILE, "w") as f:
+            f.write(xml_str)
 
     def start_frame(self, cont):
 
@@ -1386,6 +1444,7 @@ class ConfigPage(tk.Frame):
         self.cfg_truck_num_text = '''Eg: JAB2866T'''
         self.cfg_truck_num_ent.delete('0', 'end')
         self.cfg_truck_num_ent.insert('0', self.cfg_truck_num_text)
+        self.cfg_truck_num_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_truck_num_ent.place(anchor='nw', relx='0.3', rely='0.05', x='0', y='0')
 
         self.cfg_trailer_num_lbl = ttk.Label(self.veh_profile_lbf)
@@ -1397,6 +1456,7 @@ class ConfigPage(tk.Frame):
         self.cfg_trailer_num_text = '''Eg: JAB2866T'''
         self.cfg_trailer_num_ent.delete('0', 'end')
         self.cfg_trailer_num_ent.insert('0', self.cfg_trailer_num_text)
+        self.cfg_trailer_num_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_trailer_num_ent.place(anchor='nw', relx='0.3', rely='0.35', x='0', y='0')
 
         self.cfg_veh_submit_btn = ttk.Button(self.veh_profile_lbf, command=self.update_vehicle)
@@ -1421,6 +1481,7 @@ class ConfigPage(tk.Frame):
         self.cfg_tyre_brand_text = '''Eg: Austone'''
         self.cfg_tyre_brand_ent.delete('0', 'end')
         self.cfg_tyre_brand_ent.insert('0', self.cfg_tyre_brand_text)
+        self.cfg_tyre_brand_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_tyre_brand_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.05', x='0', y='0')
 
         self.cfg_tyre_name_lbl = ttk.Label(self.tyre_profile_lbf)
@@ -1432,6 +1493,7 @@ class ConfigPage(tk.Frame):
         self.cfg_tyre_name_text = '''Eg: AT1023'''
         self.cfg_tyre_name_ent.delete('0', 'end')
         self.cfg_tyre_name_ent.insert('0', self.cfg_tyre_name_text)
+        self.cfg_tyre_name_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_tyre_name_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.15', x='0', y='0')
 
         self.cfg_tyre_size_lbl = ttk.Label(self.tyre_profile_lbf)
@@ -1443,9 +1505,10 @@ class ConfigPage(tk.Frame):
         self.cfg_tyre_size_text = '''Eg: 295/80R22.5'''
         self.cfg_tyre_size_ent.delete('0', 'end')
         self.cfg_tyre_size_ent.insert('0', self.cfg_tyre_size_text)
+        self.cfg_tyre_size_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_tyre_size_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.25', x='0', y='0')
 
-        self.cfg_tyre_submit_btn = ttk.Button(self.tyre_profile_lbf, command=None)
+        self.cfg_tyre_submit_btn = ttk.Button(self.tyre_profile_lbf, command=self.update_tyre)
         self.cfg_tyre_submit_btn.configure(text='Submit Tyre Profile')
         self.cfg_tyre_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
 
@@ -1467,6 +1530,7 @@ class ConfigPage(tk.Frame):
         self.cfg_emp_name_text = '''Eg: Sudin'''
         self.cfg_emp_name_ent.delete('0', 'end')
         self.cfg_emp_name_ent.insert('0', self.cfg_emp_name_text)
+        self.cfg_emp_name_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_emp_name_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.05', x='0', y='0')
 
         self.cfg_emp_contact_lbl = ttk.Label(self.emp_profile_lbf)
@@ -1478,9 +1542,10 @@ class ConfigPage(tk.Frame):
         self.cfg_emp_contact_text = '''Eg: +60123456789'''
         self.cfg_emp_contact_ent.delete('0', 'end')
         self.cfg_emp_contact_ent.insert('0', self.cfg_emp_contact_text)
+        self.cfg_emp_contact_ent.bind('<FocusIn>', self.on_widget_click)
         self.cfg_emp_contact_ent.place(anchor='nw', relwidth='0.55', relx='0.35', rely='0.15', x='0', y='0')
 
-        self.cfg_emp_submit_btn = ttk.Button(self.emp_profile_lbf, command=None)
+        self.cfg_emp_submit_btn = ttk.Button(self.emp_profile_lbf, command=self.update_employee)
         self.cfg_emp_submit_btn.configure(text='Submit Employee Profile')
         self.cfg_emp_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
 
@@ -1498,7 +1563,7 @@ class ConfigPage(tk.Frame):
         self.cfg_currency_lbl.place(anchor='ne', relx='0.2', rely='0.1', x='0', y='0')
 
         self.currency_tkvar = tk.StringVar(value='RM')
-        self.currency_values = ['RM', 'SGD']
+        self.currency_values = ['SGD']
         self.cfg_currency_opt = tk.OptionMenu(self.app_settings_lbf, self.currency_tkvar, 'RM', *self.currency_values, command=None)
         self.cfg_currency_opt.place(anchor='nw', relwidth='0.15', relx='0.2', rely='0.05', x='0', y='0')
 
@@ -1517,29 +1582,44 @@ class ConfigPage(tk.Frame):
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
-    def create_config(self):
-        '''create defaut configuration file'''
-        root = minidom.Document()
+        self.default_vehicle = {self.cfg_truck_num_ent: self.cfg_truck_num_text, self.cfg_trailer_num_ent: self.cfg_trailer_num_text}
 
-        system = root.createElement('System')
-        root.appendChild(system)
+        self.default_tyre= {self.cfg_tyre_brand_ent: self.cfg_tyre_brand_text, self.cfg_tyre_name_ent: self.cfg_tyre_name_text, self.cfg_tyre_size_ent: self.cfg_tyre_size_text}
 
-        elements = ['App','Vehicle','Tyre','Employee']
+        self.default_employee = {self.cfg_emp_name_ent: self.cfg_emp_name_text, self.cfg_emp_contact_ent: self.cfg_emp_contact_text}
 
-        for element in elements:
-            elementChild = root.createElement(element)
-            if element == "App":
-                subElement = root.createElement("AppSettings")
-                subElement.setAttribute("Current", "RM")
-                elementChild.appendChild(subElement)
-            system.appendChild(elementChild)
+        self.widget_entry = {}
 
-        xml_str = root.toprettyxml(indent ="\t")
-        with open(CONFIG_FILE, "w") as f:
-            f.write(xml_str)
+    def on_widget_click(self, evt):
+        self.widget = self.focus_get()
+        logger.info(f"{self.widget} is in focus")
+        if self.widget in self.widget_entry.keys():
+            self.widget_data = self.widget_entry[self.widget]
+            if self.widget.get() == self.widget_entry[self.widget]:
+                self.clear_entry_field()
+            else:
+                logger.info(f"Widget [{self.widget}] has user data - {self.widget.get()}")
+        else:
+            logger.info(f"Widget [{self.widget}] has no user data.")
+            self.widget_data = self.widget.get()
+            self.widget_entry[self.widget] = self.widget_data
+            self.clear_entry_field()
+
+    def clear_entry_field(self):
+        logger.info("Clearing Entry Field for user input")
+        self.widget.delete(0, "end")
+        self.widget.insert(0, '')
+        self.widget.config(foreground = 'black')
+        self.widget.bind('<FocusOut>', self.on_widget_focusout)
+
+    def on_widget_focusout(self, evt):
+        if self.widget.get() == '':
+            logger.info("Widget [{}] is empty - Returning original placeholder".format(self.widget))
+            self.widget.insert(0, self.widget_data)
+            self.widget.config(foreground = 'grey')
 
     def clear_vehicle_profile_ent(self):
-        for wg, txt in {self.cfg_truck_num_ent: self.cfg_truck_num_text, self.cfg_trailer_num_ent: self.cfg_trailer_num_text}.items():
+        for wg, txt in self.default_vehicle.items():
             wg.delete(0, "end")
             wg.insert(0, txt)
             wg.config(foreground = "grey")
@@ -1548,13 +1628,6 @@ class ConfigPage(tk.Frame):
         '''Updates Vehicle Profile to systemconfig.xml file'''
         attrib = {"Truck_num": self.cfg_truck_num_ent.get(), "Trailer_num": self.cfg_trailer_num_ent.get()}
         logger.info(f"User input: [{attrib}]")
-
-        if os.path.isfile(CONFIG_FILE):
-            logger.info(f"Config file exists, proceed with update - {CONFIG_FILE}")
-            pass
-        else:
-            logger.warning("Config file not exists, proceed to create")
-            self.create_config()
 
         if tkMessageBox.askyesno("Confirm?", f"Truck Number: {attrib['Truck_num']}\nTrailer Number: {attrib['Trailer_num']}\nDo you want to proceed?"):
             logger.info("User proceed")
@@ -1577,7 +1650,76 @@ class ConfigPage(tk.Frame):
 
         self.clear_vehicle_profile_ent()
 
+    def clear_tyre_profile_ent(self):
+        for wg, txt in self.default_tyre.items():
+            wg.delete(0, "end")
+            wg.insert(0, txt)
+            wg.config(foreground = "grey")
 
+    def update_tyre(self):
+        '''Updates Tyre Profile to systemconfig.xml file'''
+        attrib = {"Tyre_brand": self.cfg_tyre_brand_ent.get(), "Tyre_name": self.cfg_tyre_name_ent.get(), "Tyre_size": self.cfg_tyre_size_ent.get()}
+        logger.info(f"User input: [{attrib}]")
+
+        if tkMessageBox.askyesno("Confirm?", f"Tyre Brand: {attrib['Tyre_brand']}\nTyre Name: {attrib['Tyre_name']}\nTyre Size: {attrib['Tyre_size']}\nDo you want to proceed?"):
+            logger.info("User proceed")
+
+            tree = ET.parse(CONFIG_FILE)
+            root = tree.getroot()
+            for i in root:
+                if i.tag == 'Tyre':
+                    ET.SubElement(i, "TyreProfile", attrib)
+                    dom = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml'))
+                else:
+                    pass
+
+            with open(CONFIG_FILE, 'w') as fw:
+                fw.writelines(line + "\n" for line in dom.toprettyxml().split("\n") if not line.strip() == "")
+            logger.info(f"Data written into configuration - [{attrib}]")
+        else:
+            logger.info("User aborted")
+            pass
+
+        self.clear_tyre_profile_ent()
+
+    def clear_employee_profile_ent(self):
+        for wg, txt in self.default_employee.items():
+            wg.delete(0, "end")
+            wg.insert(0, txt)
+            wg.config(foreground = "grey")
+
+    def update_employee(self):
+        '''Updates Employee Profile to systemconfig.xml file'''
+        attrib = {"Emp_name": self.cfg_emp_name_ent.get(), "Emp_contact": self.cfg_emp_contact_ent.get()}
+        logger.info(f"User input: [{attrib}]")
+
+        if tkMessageBox.askyesno("Confirm?", f"Employee Name: {attrib['Emp_name']}\nEmployee Contact: {attrib['Emp_contact']}\nDo you want to proceed?"):
+            logger.info("User proceed")
+
+            tree = ET.parse(CONFIG_FILE)
+            root = tree.getroot()
+            for i in root:
+                if i.tag == 'Employee':
+                    ET.SubElement(i, "EmployeeProfile", attrib)
+                    dom = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml'))
+                else:
+                    pass
+
+            with open(CONFIG_FILE, 'w') as fw:
+                fw.writelines(line + "\n" for line in dom.toprettyxml().split("\n") if not line.strip() == "")
+            logger.info(f"Data written into configuration - [{attrib}]")
+        else:
+            logger.info("User aborted")
+            pass
+
+        self.clear_employee_profile_ent()
+
+    def save_app_settings(self):
+        '''Update app settings to systemconfig.xml file'''
+        user_select_text = f"Currency: {self.currency_tkvar.get()}\nDo you want to proceed?"
+        if tkMessageBox.askyesno("Confirm?", user_select_text):
+            logger.info("User Proceed")
+            # TO DO continue update
 
 # ----- Execution ----- #
 

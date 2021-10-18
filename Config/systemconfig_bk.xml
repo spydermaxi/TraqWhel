@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<System>
+	<App>
+		<AppSettings Current="RM"/>
+	</App>
+	<Vehicle>
+		<VehicleProfile Truck_num="SMT8234E" Trailer_num="JJBTTTTT"/>
+		<VehicleProfile Truck_num="SMT8888X" Trailer_num="SME8888T"/>
+		<VehicleProfile Truck_num="SLD4683P" Trailer_num="SLF8888P"/>
+	</Vehicle>
+	<Tyre>
+		<TyreProfile Tyre_brand="Austone" Tyre_name="AT18888" Tyre_size="295/80R/22.5"/>
+		<TyreProfile Tyre_brand="Keystone" Tyre_name="KS8888" Tyre_size="295/80R22.5"/>
+	</Tyre>
+	<Employee>
+		<EmployeeProfile Emp_name="Adrian" Emp_contact="+6592328474"/>
+		<EmployeeProfile Emp_name="Rushin" Emp_contact="+6590292157"/>
+	</Employee>
+</System>
