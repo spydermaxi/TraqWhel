@@ -26,6 +26,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-15: 1.0.0-alpha [Adrian Loo] Complete ConfigPage UI design
 # 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
 # 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
+# 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -194,7 +195,7 @@ class TyreApp(tk.Tk):
             logger.info("No Configuration file found, creating default configuration file")
             self.create_config()
             logger.info("Loading Configuration page")
-            tkMessageBox.showinfo("Information", "Welcome to ModernWong Transport Tyre Tracking App.\n\nTo start using the app, please fill in the profiles for the following:\n1. Vehicles - enter your fleet numbers\n2. Tyre - Enter the information for the tyres you have in stock\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
+            tkMessageBox.showinfo("Information", "Welcome to ModernWong Transport Tyre Tracking App.\n\n\nTo start using the app, please fill in the profiles for the following:\n\n\n1. Vehicles - enter your fleet numbers\n\n2. Tyre - Enter the information for the tyres you have in stock\n\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
             self.start_frame(ConfigPage)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
@@ -235,7 +236,7 @@ class TyreApp(tk.Tk):
             elementChild = root.createElement(element)
             if element == "App":
                 subElement = root.createElement("AppSettings")
-                subElement.setAttribute("Current", "RM")
+                subElement.setAttribute("Currency", "RM")
                 elementChild.appendChild(subElement)
             system.appendChild(elementChild)
 
@@ -1463,8 +1464,8 @@ class ConfigPage(tk.Frame):
         self.cfg_veh_submit_btn.configure(text='Submit Vehicle Profile')
         self.cfg_veh_submit_btn.place(anchor='n', relx='0.5', rely='0.65', x='0', y='0')
 
-        self.cfg_veh_load_btn = ttk.Button(self.veh_profile_lbf, command=None)
-        self.cfg_veh_load_btn.configure(text='Load Existing\nVehicle Data')
+        self.cfg_veh_load_btn = ttk.Button(self.veh_profile_lbf, command=self.load_vehicle_data)
+        self.cfg_veh_load_btn.configure(text='Load & Edit\nVehicle Data')
         self.cfg_veh_load_btn.place(anchor='ne', relheight='0.8', relwidth='0.2', relx='0.95', rely='0.05', x='0', y='0')
 
         # --- Tyre Profile Section --- #
@@ -1512,8 +1513,8 @@ class ConfigPage(tk.Frame):
         self.cfg_tyre_submit_btn.configure(text='Submit Tyre Profile')
         self.cfg_tyre_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
 
-        self.cfg_tyre_load_btn = ttk.Button(self.tyre_profile_lbf, command=None)
-        self.cfg_tyre_load_btn.configure(text='Load Existing\nTyre Data')
+        self.cfg_tyre_load_btn = ttk.Button(self.tyre_profile_lbf, command=self.load_tyre_data)
+        self.cfg_tyre_load_btn.configure(text='Load & Edit\nTyre Data')
         self.cfg_tyre_load_btn.place(anchor='n', relheight='0.2', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
 
         # --- Employee profile section --- #
@@ -1549,8 +1550,8 @@ class ConfigPage(tk.Frame):
         self.cfg_emp_submit_btn.configure(text='Submit Employee Profile')
         self.cfg_emp_submit_btn.place(anchor='n', relx='0.5', rely='0.4', x='0', y='0')
 
-        self.cfg_emp_load_btn = ttk.Button(self.emp_profile_lbf, command=None)
-        self.cfg_emp_load_btn.configure(text='Load Existing\nEmployee Data')
+        self.cfg_emp_load_btn = ttk.Button(self.emp_profile_lbf, command=self.load_employee_data)
+        self.cfg_emp_load_btn.configure(text='Load & Edit\nEmployee Data')
         self.cfg_emp_load_btn.place(anchor='n', relheight='0.2', relwidth='0.5', relx='0.5', rely='0.7', x='0', y='0')
 
         # --- App Settings Section --- #
@@ -1567,7 +1568,7 @@ class ConfigPage(tk.Frame):
         self.cfg_currency_opt = tk.OptionMenu(self.app_settings_lbf, self.currency_tkvar, 'RM', *self.currency_values, command=None)
         self.cfg_currency_opt.place(anchor='nw', relwidth='0.15', relx='0.2', rely='0.05', x='0', y='0')
 
-        self.cfg_setting_save_btn = ttk.Button(self.app_settings_lbf, command=None)
+        self.cfg_setting_save_btn = ttk.Button(self.app_settings_lbf, command=self.save_app_settings)
         self.cfg_setting_save_btn.configure(text='Save Settings')
         self.cfg_setting_save_btn.place(anchor='se', relwidth='0.2', relx='0.95', rely='0.8', x='0', y='0')
 
@@ -1575,6 +1576,7 @@ class ConfigPage(tk.Frame):
         self.display_port_lbf = ttk.Labelframe(self)
         self.display_port_lbf.configure(height='200', labelanchor='n', text='Display Port', width='200')
         self.display_port_lbf.place(anchor='n', relheight='0.865', relwidth='0.56', relx='0.71', rely='0.06', x='0', y='0')
+        # --- End of Display Port --- #
 
         self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
@@ -1582,6 +1584,7 @@ class ConfigPage(tk.Frame):
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
+        # --- Setting default value references --- #
         self.default_vehicle = {self.cfg_truck_num_ent: self.cfg_truck_num_text, self.cfg_trailer_num_ent: self.cfg_trailer_num_text}
 
         self.default_tyre= {self.cfg_tyre_brand_ent: self.cfg_tyre_brand_text, self.cfg_tyre_name_ent: self.cfg_tyre_name_text, self.cfg_tyre_size_ent: self.cfg_tyre_size_text}
@@ -1626,8 +1629,19 @@ class ConfigPage(tk.Frame):
 
     def update_vehicle(self):
         '''Updates Vehicle Profile to systemconfig.xml file'''
-        attrib = {"Truck_num": self.cfg_truck_num_ent.get(), "Trailer_num": self.cfg_trailer_num_ent.get()}
-        logger.info(f"User input: [{attrib}]")
+
+        validate = []
+        for wg, txt in self.default_vehicle.items():
+            if wg.get() == txt:
+                validate.append(1)
+            else:
+                validate.append(0)
+        if any(validate):
+            tkMessageBox.showwarning("Warning", "You need to enter info to submit.\nPlease try again.")
+            return None
+        else:
+            attrib = {"Truck_num": self.cfg_truck_num_ent.get(), "Trailer_num": self.cfg_trailer_num_ent.get()}
+            logger.info(f"User input: [{attrib}]")
 
         if tkMessageBox.askyesno("Confirm?", f"Truck Number: {attrib['Truck_num']}\nTrailer Number: {attrib['Trailer_num']}\nDo you want to proceed?"):
             logger.info("User proceed")
@@ -1658,8 +1672,19 @@ class ConfigPage(tk.Frame):
 
     def update_tyre(self):
         '''Updates Tyre Profile to systemconfig.xml file'''
-        attrib = {"Tyre_brand": self.cfg_tyre_brand_ent.get(), "Tyre_name": self.cfg_tyre_name_ent.get(), "Tyre_size": self.cfg_tyre_size_ent.get()}
-        logger.info(f"User input: [{attrib}]")
+
+        validate = []
+        for wg, txt in self.default_tyre.items():
+            if wg.get() == txt:
+                validate.append(1)
+            else:
+                validate.append(0)
+        if any(validate):
+            tkMessageBox.showwarning("Warning", "You need to enter info to submit.\nPlease try again.")
+            return None
+        else:
+            attrib = {"Tyre_brand": self.cfg_tyre_brand_ent.get(), "Tyre_name": self.cfg_tyre_name_ent.get(), "Tyre_size": self.cfg_tyre_size_ent.get()}
+            logger.info(f"User input: [{attrib}]")
 
         if tkMessageBox.askyesno("Confirm?", f"Tyre Brand: {attrib['Tyre_brand']}\nTyre Name: {attrib['Tyre_name']}\nTyre Size: {attrib['Tyre_size']}\nDo you want to proceed?"):
             logger.info("User proceed")
@@ -1690,8 +1715,19 @@ class ConfigPage(tk.Frame):
 
     def update_employee(self):
         '''Updates Employee Profile to systemconfig.xml file'''
-        attrib = {"Emp_name": self.cfg_emp_name_ent.get(), "Emp_contact": self.cfg_emp_contact_ent.get()}
-        logger.info(f"User input: [{attrib}]")
+
+        validate = []
+        for wg, txt in self.default_employee.items():
+            if wg.get() == txt:
+                validate.append(1)
+            else:
+                validate.append(0)
+        if any(validate):
+            tkMessageBox.showwarning("Warning", "You need to enter info to submit.\nPlease try again.")
+            return None
+        else:
+            attrib = {"Emp_name": self.cfg_emp_name_ent.get(), "Emp_contact": self.cfg_emp_contact_ent.get()}
+            logger.info(f"User input: [{attrib}]")
 
         if tkMessageBox.askyesno("Confirm?", f"Employee Name: {attrib['Emp_name']}\nEmployee Contact: {attrib['Emp_contact']}\nDo you want to proceed?"):
             logger.info("User proceed")
@@ -1719,7 +1755,370 @@ class ConfigPage(tk.Frame):
         user_select_text = f"Currency: {self.currency_tkvar.get()}\nDo you want to proceed?"
         if tkMessageBox.askyesno("Confirm?", user_select_text):
             logger.info("User Proceed")
-            # TO DO continue update
+
+            tree = ET.parse(CONFIG_FILE)
+            root = tree.getroot()
+
+            for el in list(root.findall("App")[0].iter()):
+                if el.tag == "AppSettings" and "Currency" in el.attrib.keys():
+                    el.attrib['Currency'] = self.currency_tkvar.get()
+                else:
+                    pass
+
+            xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="\t")
+            with open(CONFIG_FILE, 'w') as fw:
+                fw.writelines(line + "\n" for line in xmlstr.split("\n") if not line.strip() == "")
+        else:
+            logger.info("User abort")
+
+    def clear_cfg_display_port(self):
+        '''clean up display port'''
+        try:
+            for widget in self.display_port_lbf.winfo_children():
+                widget.destroy()
+                logger.info(f"Child destroyed - {widget}")
+        except Exception as e:
+            logger.exception(f"Error destroying children - {widget}")
+
+    def load_vehicle_data(self):
+        '''function to populate vehicle data into view port'''
+
+        # Clear viewport first
+        self.clear_cfg_display_port()
+
+        # Load Configuration data
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        self.head_lblf = ttk.Labelframe(self.display_port_lbf)
+        self.head_lblf.configure(text='Vehicle Information', labelanchor='n')
+        # head_lblf.grid(row=0, column=0, columnspan=4, sticky='nsew', padx=20)
+        self.head_lblf.pack()
+
+        id_lbl = tk.Entry(self.head_lblf,)
+        id_lbl.delete('0', 'end')
+        id_lbl.insert('0', "ID")
+        id_lbl.configure(state='disabled', width=3, justify='center')
+        id_lbl.grid(row=0, column=0)
+
+        truck_num_lbl = tk.Entry(self.head_lblf, text='Truck Number')
+        truck_num_lbl.delete('0', 'end')
+        truck_num_lbl.insert('0', 'Truck Number')
+        truck_num_lbl.configure(state='disabled', justify='center')
+        truck_num_lbl.grid(row=0, column=1)
+
+        trailer_num_lbl = tk.Entry(self.head_lblf, text='Trailer Number')
+        trailer_num_lbl.delete('0', 'end')
+        trailer_num_lbl.insert('0', 'Trailer Number')
+        trailer_num_lbl.configure(state='disabled', justify='center')
+        trailer_num_lbl.grid(row=0, column=2)
+
+        del_lbl = tk.Entry(self.head_lblf, text="Del")
+        del_lbl.delete('0', 'end')
+        del_lbl.insert('0', "Del")
+        del_lbl.configure(state='disabled', width=6, justify='center')
+        del_lbl.grid(row=0, column=3)
+
+        ct = 1
+        for el in root.findall("Vehicle")[0].findall("VehicleProfile"):
+
+            lblf = ttk.Labelframe(self.display_port_lbf)
+            lblf.configure(cursor='hand2')
+            # lblf.grid(row=ct, column=0, columnspan=4, sticky='nsew', padx=20)
+            lblf.pack()
+            lblf.bind('<Enter>', self.check_row)
+
+            id_ent = tk.Entry(lblf)
+            id_ent.delete('0', 'end')
+            id_ent.insert('0', str(ct))
+            id_ent.configure(state='disabled', width=3, justify='center')
+            id_ent.grid(row=0, column=0)
+
+            truck_ent = tk.Entry(lblf)
+            truck_ent.delete('0', 'end')
+            truck_ent.insert('0', el.attrib['Truck_num'])
+            truck_ent.configure(state='disabled', justify='center')
+            truck_ent.grid(row=0, column=1)
+
+            trailer_ent = tk.Entry(lblf)
+            trailer_ent.delete('0', 'end')
+            trailer_ent.insert('0', el.attrib['Trailer_num'])
+            trailer_ent.configure(state='disabled', justify='center')
+            trailer_ent.grid(row=0, column=2)
+
+            del_btn = tk.Button(lblf, text='X', width=4)
+            del_btn.configure(state='disabled')
+            del_btn.grid(row=0, column=3)
+            del_btn.bind('<Button-1>', self.del_row)
+            del_btn.bind('<Leave>', self.disable_btn)
+
+            ct += 1
+
+        save_btn = ttk.Button(self.display_port_lbf, text="Save", width=20, command=self.save_display_changes)
+        save_btn.pack()
+
+    def load_tyre_data(self):
+        '''function to populate tyre data into view port'''
+
+        # Clear viewport first
+        self.clear_cfg_display_port()
+
+        # Load Configuration data
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        self.head_lblf = ttk.Labelframe(self.display_port_lbf)
+        self.head_lblf.configure(text='Tyre Information', labelanchor='n')
+        # head_lblf.grid(row=0, column=0, columnspan=4, sticky='nsew', padx=20)
+        self.head_lblf.pack()
+
+        id_lbl = tk.Entry(self.head_lblf,)
+        id_lbl.delete('0', 'end')
+        id_lbl.insert('0', "ID")
+        id_lbl.configure(state='disabled', width=3, justify='center')
+        id_lbl.grid(row=0, column=0)
+
+        tyre_brand_lbl = tk.Entry(self.head_lblf, text='Tyre Brand')
+        tyre_brand_lbl.delete('0', 'end')
+        tyre_brand_lbl.insert('0', 'Tyre Brand')
+        tyre_brand_lbl.configure(state='disabled', justify='center')
+        tyre_brand_lbl.grid(row=0, column=1)
+
+        tyre_name_lbl = tk.Entry(self.head_lblf, text='Tyre Name')
+        tyre_name_lbl.delete('0', 'end')
+        tyre_name_lbl.insert('0', 'Tyre Name')
+        tyre_name_lbl.configure(state='disabled', justify='center')
+        tyre_name_lbl.grid(row=0, column=2)
+
+        tyre_size_lbl = tk.Entry(self.head_lblf, text='Tyre Size')
+        tyre_size_lbl.delete('0', 'end')
+        tyre_size_lbl.insert('0', 'Tyre Size')
+        tyre_size_lbl.configure(state='disabled', justify='center')
+        tyre_size_lbl.grid(row=0, column=3)
+
+        del_lbl = tk.Entry(self.head_lblf, text="Del")
+        del_lbl.delete('0', 'end')
+        del_lbl.insert('0', "Del")
+        del_lbl.configure(state='disabled', width=6, justify='center')
+        del_lbl.grid(row=0, column=4)
+
+        ct = 1
+        for el in root.findall("Tyre")[0].findall("TyreProfile"):
+
+            lblf = ttk.Labelframe(self.display_port_lbf)
+            lblf.configure(cursor='hand2')
+            # lblf.grid(row=ct, column=0, columnspan=4, sticky='nsew', padx=20)
+            lblf.pack()
+            lblf.bind('<Enter>', self.check_row)
+
+            id_ent = tk.Entry(lblf)
+            id_ent.delete('0', 'end')
+            id_ent.insert('0', str(ct))
+            id_ent.configure(state='disabled', width=3, justify='center')
+            id_ent.grid(row=0, column=0)
+
+            ty_brd = tk.Entry(lblf)
+            ty_brd.delete('0', 'end')
+            ty_brd.insert('0', el.attrib['Tyre_brand'])
+            ty_brd.configure(state='disabled', justify='center')
+            ty_brd.grid(row=0, column=1)
+
+            ty_nm = tk.Entry(lblf)
+            ty_nm.delete('0', 'end')
+            ty_nm.insert('0', el.attrib['Tyre_name'])
+            ty_nm.configure(state='disabled', justify='center')
+            ty_nm.grid(row=0, column=2)
+
+            ty_sz = tk.Entry(lblf)
+            ty_sz.delete('0', 'end')
+            ty_sz.insert('0', el.attrib['Tyre_size'])
+            ty_sz.configure(state='disabled', justify='center')
+            ty_sz.grid(row=0, column=3)
+
+            del_btn = tk.Button(lblf, text='X', width=4)
+            del_btn.configure(state='disabled')
+            del_btn.grid(row=0, column=4)
+            del_btn.bind('<Button-1>', self.del_row)
+            del_btn.bind('<Leave>', self.disable_btn)
+
+            ct += 1
+
+        save_btn = ttk.Button(self.display_port_lbf, text="Save", width=20, command=self.save_display_changes)
+        save_btn.pack()
+
+    def load_employee_data(self):
+        '''function to populate vehicle data into view port'''
+
+        # Clear viewport first
+        self.clear_cfg_display_port()
+
+        # Load Configuration data
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        self.head_lblf = ttk.Labelframe(self.display_port_lbf)
+        self.head_lblf.configure(text='Employee Information', labelanchor='n')
+        # head_lblf.grid(row=0, column=0, columnspan=4, sticky='nsew', padx=20)
+        self.head_lblf.pack()
+
+        id_lbl = tk.Entry(self.head_lblf,)
+        id_lbl.delete('0', 'end')
+        id_lbl.insert('0', "ID")
+        id_lbl.configure(state='disabled', width=3, justify='center')
+        id_lbl.grid(row=0, column=0)
+
+        emp_nm_lbl = tk.Entry(self.head_lblf, text='Employee Name')
+        emp_nm_lbl.delete('0', 'end')
+        emp_nm_lbl.insert('0', 'Employee Name')
+        emp_nm_lbl.configure(state='disabled', justify='center')
+        emp_nm_lbl.grid(row=0, column=1)
+
+        emp_ct_lbl = tk.Entry(self.head_lblf, text='Employee Contact')
+        emp_ct_lbl.delete('0', 'end')
+        emp_ct_lbl.insert('0', 'Employee Contact')
+        emp_ct_lbl.configure(state='disabled', justify='center')
+        emp_ct_lbl.grid(row=0, column=2)
+
+        del_lbl = tk.Entry(self.head_lblf, text="Del")
+        del_lbl.delete('0', 'end')
+        del_lbl.insert('0', "Del")
+        del_lbl.configure(state='disabled', width=6, justify='center')
+        del_lbl.grid(row=0, column=3)
+
+        ct = 1
+        for el in root.findall("Employee")[0].findall("EmployeeProfile"):
+
+            lblf = ttk.Labelframe(self.display_port_lbf)
+            lblf.configure(cursor='hand2')
+            # lblf.grid(row=ct, column=0, columnspan=4, sticky='nsew', padx=20)
+            lblf.pack()
+            lblf.bind('<Enter>', self.check_row)
+
+            id_ent = tk.Entry(lblf)
+            id_ent.delete('0', 'end')
+            id_ent.insert('0', str(ct))
+            id_ent.configure(state='disabled', width=3, justify='center')
+            id_ent.grid(row=0, column=0)
+
+            emp_nm_ent = tk.Entry(lblf)
+            emp_nm_ent.delete('0', 'end')
+            emp_nm_ent.insert('0', el.attrib['Emp_name'])
+            emp_nm_ent.configure(state='disabled', justify='center')
+            emp_nm_ent.grid(row=0, column=1)
+
+            emp_ct_ent = tk.Entry(lblf)
+            emp_ct_ent.delete('0', 'end')
+            emp_ct_ent.insert('0', el.attrib['Emp_contact'])
+            emp_ct_ent.configure(state='disabled', justify='center')
+            emp_ct_ent.grid(row=0, column=2)
+
+            del_btn = tk.Button(lblf, text='X', width=4)
+            del_btn.configure(state='disabled')
+            del_btn.grid(row=0, column=3)
+            del_btn.bind('<Button-1>', self.del_row)
+            del_btn.bind('<Leave>', self.disable_btn)
+
+            ct += 1
+
+        save_btn = ttk.Button(self.display_port_lbf, text="Save", width=20, command=self.save_display_changes)
+        save_btn.pack()
+
+    def check_row(self, evt):
+        '''Checks for the labelframe and set a self variable'''
+        x,y = self.winfo_pointerxy()
+        self.widget_infocus = self.winfo_containing(x,y)
+        logger.info(self.widget_infocus.configure()['cursor'][-1])
+        if 'hand2' in self.widget_infocus.configure()['cursor']:
+            logger.info(f"{self.widget_infocus} is in focus")
+            self.btn_widget_infocus = self.widget_infocus.winfo_children()[-1]
+            if "X" in self.btn_widget_infocus.configure()['text']:
+                self.btn_widget_infocus.configure(state='normal')
+                logger.info(f"{self.btn_widget_infocus} is activated")
+            else:
+                del self.btn_widget
+        else:
+            del self.widget_infocus
+
+    def del_row(self, evt):
+        '''deletes the widget that is set in focus'''
+        self.widget_infocus.destroy()
+
+    def disable_btn(self, evt):
+        '''disable the button widget that is in focus'''
+        self.btn_widget_infocus.configure(state='disabled')
+
+    def save_display_changes(self):
+        '''checks for changes in configuration and save changes'''
+
+        widget_ls = self.display_port_lbf.winfo_children()
+
+        # Check which profile is this
+        for wg in widget_ls:
+            lbl_text = wg.configure('text')[-1]
+            if "Vehicle" in lbl_text:
+                profile = "Vehicle"
+                prof_info = ['Truck_num', 'Trailer_num']
+                break
+            elif "Tyre" in lbl_text:
+                profile = "Tyre"
+                prof_info = ['Tyre_brand', 'Tyre_name', 'Tyre_size']
+                break
+            elif "Employee" in lbl_text:
+                profile = "Employee"
+                prof_info = ['Emp_name', 'Emp_contact']
+                break
+            else:
+                pass
+
+        logger.info(f"This is a {profile} profile - {prof_info}")
+
+        # Load config file to check
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        # Checking total count difference between new and old
+        profilenode = root.findall(profile)[0]
+        org_ent_ct = len(profilenode.findall(f"{profile}Profile"))
+        new_ent_ct = len(widget_ls[1:-1])
+
+        if new_ent_ct < org_ent_ct:
+            _text_ = f"Updated table has {new_ent_ct} items. Original has {org_ent_ct} items"
+            logger.info(_text_)
+            if tkMessageBox.askyesno("Attention", f"{_text_}\nDo you want to continue?"):
+                logger.info("User continue")
+
+                # Backup original file
+                try:
+                    shutil.copy(CONFIG_FILE, f"{CONFIG_FILE}.bk{''.join(re.findall('[^ :-]+', str(datetime.now().replace(microsecond=0))))}")
+                except Exception as e:
+                    logger.exception(f"Error during backup - {e}")
+
+                # Remove Child element from root
+                for child in profilenode.findall(f"{profile}Profile"):
+                    profilenode.remove(child)
+
+                for wg in widget_ls[1:-1]:
+                    pos = 0
+                    attrib = {}
+                    for child in wg.winfo_children()[1:-1]:
+                        attrib[prof_info[pos]] = child.get()
+                        pos += 1
+                    logger.info(f"Adding attribute to {profilenode} - {attrib}")
+                    ET.SubElement(profilenode, f"{profile}Profile", attrib)
+
+                xmlstr = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml'))
+                with open(CONFIG_FILE, 'w') as fw:
+                    fw.writelines(line+"\n" for line in xmlstr.toprettyxml().split("\n") if not line.strip() == "")
+                logger.info("Config updated")
+
+            else:
+                logger.info("User Abort")
+                tkMessageBox.showinfo("Information", "No changes were made to database")
+        else:
+            _text_ = "There is no difference in number of items"
+            logger.info(_text_)
+            tkMessageBox.showinfo("Information", _text_)
+
 
 # ----- Execution ----- #
 
