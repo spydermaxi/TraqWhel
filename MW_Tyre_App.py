@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------#
 #
 # Ident        : MY_Tyre_App.py
-__version__ = "1.0.0-alpha"
+__version__ = "1.0.0"
 __author__ = "Adrian Loo"
 """
 The Tyre App for tracking tyre usage and inventory for Modern Wong
@@ -28,6 +28,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
 # 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
 # 2021-10-20: 1.0.0-alpha [Adrian Loo] Complete Tyre Tracking and Inventory Page functions
+# 2021-10-20: 1.0.0 [Adrian Loo] Complete Dashboard Page functions
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -586,6 +587,7 @@ class TrackInvPage(tk.Frame):
                 tkMessageBox.showerror("Error", err_msg)
         else:
             logger.error(f"Directory not selected, download operation skipped - {exp_dir}")
+            tkMessageBox.showinfo("Operation Cancelled", "Directory not selected. Export cancelled.")
 
     def clear_entries(self, entry_box, entry_text):
         entry_box.delete(0, "end")
@@ -670,7 +672,7 @@ class TrackTyrePage(tk.Frame):
         self.view_lbf = ttk.Labelframe(self)
 
         self.view_vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-        self.view_vehnum_values = controller.load_profile_list("Vehicle", "Truck_num")
+        self.view_vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
         self.view_vehnum_opt = tk.OptionMenu(self.view_lbf, self.view_vehnum_tkvar, 'Select Vehicle Number', *self.view_vehnum_values, command=None)
         self.view_vehnum_opt.place(anchor='ne', relheight='0.5', relwidth='0.5', relx='0.52', rely='0.02', x='0', y='0')
 
@@ -769,7 +771,7 @@ class TrackTyrePage(tk.Frame):
         self.tyrename_opt = tk.OptionMenu(self.update_lbf, self.tyrename_tkvar, 'Select Tyre Name', *self.tyrename_values, command=None)
         self.tyrename_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.76', rely='-0.02', x='0', y='0')
 
-        self.update_submit_btn = ttk.Button(self.update_lbf)
+        self.update_submit_btn = ttk.Button(self.update_lbf, command=self.submit_tyre_data)
         self.update_submit_btn.configure(text='Submit Entry')
         self.update_submit_btn.place(anchor='nw', relheight='0.55', relwidth='0.17', relx='0.765', rely='0.31', x='0', y='0')
 
@@ -1161,6 +1163,7 @@ class TrackTyrePage(tk.Frame):
                 tkMessageBox.showerror("Error", err_msg)
         else:
             logger.error(f"Directory not selected, download operation skipped - {exp_dir}")
+            tkMessageBox.showinfo("Operation Cancelled", "Directory not selected. Export cancelled.")
 
     def on_widget_click(self, evt):
         self.widget = self.focus_get()
@@ -1219,9 +1222,10 @@ class DashboardPage(tk.Frame):
         self.ctrl_panel.configure(height='200', text='Control Panel', width='200')
         self.ctrl_panel.place(anchor='n', relheight='0.15', relwidth='0.98', relx='0.5', rely='0.06', x='0', y='0')
 
+        # Funtion Labeframe
         self.func_lblf = ttk.Labelframe(self.ctrl_panel)
         self.func_lblf.configure(height='200', text='Select Function', width='200')
-        self.func_lblf.place(anchor='nw', relheight='0.9', relwidth='0.15', relx='0.01', rely='0.0', x='0', y='0')
+        self.func_lblf.place(anchor='nw', relheight='0.9', relwidth='0.24', relx='0.01', rely='0.0', x='0', y='0')
 
         self._func_tkvar = tk.StringVar(value='Tyre Usage')
         __values = ["Average Tyre Mileage", "Average Vehicle Mileage"]
@@ -1229,9 +1233,10 @@ class DashboardPage(tk.Frame):
         self.func_menu = tk.OptionMenu(self.func_lblf, self._func_tkvar, 'Tyre Usage', *__values, command=None)
         self.func_menu.place(anchor='nw', relheight='0.98', relwidth='0.98', relx='0.01', rely='0.01', x='0', y='0')
 
+        # Option Labeframe
         self.option_lblf = ttk.Labelframe(self.ctrl_panel)
         self.option_lblf.configure(height='200', text='Visualization Settings', width='200')
-        self.option_lblf.place(anchor='nw', relheight='0.9', relwidth='0.81', relx='0.18', rely='0.0', x='0', y='0')
+        self.option_lblf.place(anchor='nw', relheight='0.9', relwidth='0.74', relx='0.26', rely='0.0', x='0', y='0')
 
         self.plot_btn = ttk.Button(self.option_lblf, command=self.track_inv_tyre_usage)
         self.plot_btn.configure(cursor='hand2', text='Plot Chart', width='20')
@@ -1240,13 +1245,13 @@ class DashboardPage(tk.Frame):
         # Plot dummy Canvas
         fig, ax = plt.subplots(tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
-        plot_widget = canvas.get_tk_widget()
-        plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
+        self.plot_widget = canvas.get_tk_widget()
+        self.plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
         plt.rcParams.update({'font.size': 7})
-        toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
-        toolbar.config(background='white')
-        toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
+        self.toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
+        self.toolbar.config(background='white')
+        self.toolbar.update()
+        self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
         self.track_inv_tyre_usage()
 
         self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
@@ -1268,7 +1273,7 @@ class DashboardPage(tk.Frame):
         if self._func_tkvar.get() == "Tyre Usage":
             self.plot_btn = ttk.Button(self.option_lblf, command=self.track_inv_tyre_usage)
             self.plot_btn.configure(cursor='hand2', text='Plot Chart', width='20')
-            self.plot_btn.place(anchor='nw', relheight='0.9', relwidth='0.2', relx='0.01', rely='0.01', x='0', y='0')
+            self.plot_btn.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.01', rely='0.1', x='0', y='0')
 
         elif self._func_tkvar.get() == "Average Tyre Mileage":
             self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
@@ -1276,83 +1281,37 @@ class DashboardPage(tk.Frame):
             self.sel_veh_num_menu = tk.OptionMenu(self.option_lblf, self._vehnum_tkvar, 'Select Vehicle Number', *_vehnum_values, command=None)
             self.sel_veh_num_menu.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.01', rely='0.1', x='0', y='0')
 
-            self._vehtype_tkvar = tk.StringVar(value='Select Vehicle Type')
-            _vehtype_values = pd.read_csv(TRACK_DB)['Vehicle_Type'].unique()
-            self.sel_veh_type_menu = tk.OptionMenu(self.option_lblf, self._vehtype_tkvar, 'Select Vehicle Type', *_vehtype_values, command=None)
-            self.sel_veh_type_menu.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.22', rely='0.1', x='0', y='0')
-
-            self.plot_btn = ttk.Button(self.option_lblf, command=self.plot_tyre_mileage)
-            self.plot_btn.configure(text='Plot Chart')
-            self.plot_btn.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.44', rely='0.1', x='0', y='0')
-
-        elif self._func_tkvar.get() == "Average Vehicle Mileage":
-            self._vehtype_tkvar = tk.StringVar(value='Select Vehicle Type')
-            _vehtype_values = pd.read_csv(TRACK_DB)['Vehicle_Type'].unique()
-            self.sel_veh_type_menu = tk.OptionMenu(self.option_lblf, self._vehtype_tkvar, 'Select Vehicle Type', *_vehtype_values, command=None)
-            self.sel_veh_type_menu.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.01', rely='0.1', x='0', y='0')
-
-            self.plot_btn = ttk.Button(self.option_lblf, command=self.plot_vehicle_mileage)
+            self.plot_btn = ttk.Button(self.option_lblf, command=lambda: self.plot_tyre_mileage(self._vehnum_tkvar.get()))
             self.plot_btn.configure(text='Plot Chart')
             self.plot_btn.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.22', rely='0.1', x='0', y='0')
+
+        elif self._func_tkvar.get() == "Average Vehicle Mileage":
+            logger.info("Displaying Plot button for Average Mileage Per Vehicle")
+            self.plot_btn = ttk.Button(self.option_lblf, command=self.plot_per_vehicle_mileage)
+            self.plot_btn.configure(text='Plot Chart')
+            self.plot_btn.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.01', rely='0.1', x='0', y='0')
 
         else:
 
             pass
 
-    def plot_tyre_mileage(self):
-        self.track_tyre_mileage_per_vehicle_type(self._vehnum_tkvar.get(), self._vehtype_tkvar.get())
-
-    def plot_vehicle_mileage(self):
-        self.track_per_vehicle_mileage(self._vehtype_tkvar.get())
-
-    def track_tyre_mileage_per_vehicle_type(self, vehicle_number, vehicle_type):
-        '''Track per vehicle tyre replacement mileage'''
-
-        fig, ax = plt.subplots(tight_layout=True)
-        canvas = FigureCanvasTkAgg(fig, master=self)
-        plot_widget = canvas.get_tk_widget()
-        plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
-        plt.rcParams.update({'font.size': 7})
-        toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
-        toolbar.config(background='white')
-        toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
-
-        try:
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
-
-            pv = df[(df['Vehicle_Number'] == vehicle_number) & (df['Vehicle_Type'] == vehicle_type)].pivot_table(values="Vehicle_Mileage", index='Date', columns=['Tyre_Location'], aggfunc='mean')
-
-            pv.diff().plot(ax=ax, grid=True,  title="Mileage Per Tyre for - {}".format(vehicle_number), marker='o')
-            ax.legend(loc="best", ncol=6)
-
-            # Create custom ticks using matplotlib date tick locator and formatter
-            major_loc = mdates.MonthLocator(interval=6)
-            minor_loc = mdates.MonthLocator(interval=3)
-            ax.xaxis.set_major_locator(major_loc)
-            ax.xaxis.set_minor_locator(minor_loc)
-            fmt = mdates.DateFormatter('%b\n%Y')
-            ax.xaxis.set_major_formatter(fmt)
-            ax.grid('on', which='minor', axis='x')
-            ax.grid('on', which='major', axis='both')
-            ax.tick_params(axis="x", labelrotation=0)
-
-        except Exception as e:
-            logger.exception(f"Error drawing tyre inventory usage - {e}")
-
-        fig.canvas.draw()
-
     def track_inv_tyre_usage(self):
 
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
-        plot_widget = canvas.get_tk_widget()
-        plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
+
+        # Clear Canvas
+        self.plot_widget.destroy()
+        self.toolbar.destroy()
+
+        # Create canvas
+        self.plot_widget = canvas.get_tk_widget()
+        self.plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
         plt.rcParams.update({'font.size': 7})
-        toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
-        toolbar.config(background='white')
-        toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
+        self.toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
+        self.toolbar.config(background='white')
+        self.toolbar.update()
+        self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
 
         try:
             trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
@@ -1393,25 +1352,83 @@ class DashboardPage(tk.Frame):
 
         fig.canvas.draw()
 
-    def track_per_vehicle_mileage(self, vehicle_type):
+    def plot_tyre_mileage(self, vehicle_number):
         '''Track per vehicle tyre replacement mileage'''
 
         fig, ax = plt.subplots(tight_layout=True)
         canvas = FigureCanvasTkAgg(fig, master=self)
-        plot_widget = canvas.get_tk_widget()
-        plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
+
+        # Clear Canvas
+        self.plot_widget.destroy()
+        self.toolbar.destroy()
+
+        # Create canvas
+        self.plot_widget = canvas.get_tk_widget()
+        self.plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
+
         plt.rcParams.update({'font.size': 7})
-        toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
-        toolbar.config(background='white')
-        toolbar.update()
-        toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.851')
+        self.toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
+        self.toolbar.config(background='white')
+        self.toolbar.update()
+        self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
 
         try:
             df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
 
-            pv = df[df['Vehicle_Type'] == vehicle_type].pivot_table(values="Vehicle_Mileage", index='Vehicle_Number', columns=['Tyre_Location'], aggfunc='mean')
+            pv = df[df['Vehicle_Number'] == vehicle_number].pivot_table(values='Vehicle_Mileage', index='Date', columns=['Tyre_Location'], aggfunc='mean')
 
-            pv.plot(ax=ax, title="Average Mileage Per {}".format(vehicle_type), marker='o')
+            dlist = []
+            md = pv.dropna().diff().mean().to_dict()
+            for k, v in md.items():
+                ddict = {"Tyre Location": k, "Tyre Average Mileage": v}
+                dlist.append(ddict)
+
+            df = pd.DataFrame(dlist)
+            pv = df.pivot_table(values="Tyre Average Mileage", index='Tyre Location', aggfunc='mean')
+
+            y_ulim = pv["Tyre Average Mileage"].max() + 100
+            y_llim = pv["Tyre Average Mileage"].min() - 500
+
+            pv.plot(kind='bar', ax=ax, grid=True, title=f"Mileage Per Tyre - {vehicle_number}", ylim=(y_llim, y_ulim))
+            ax.legend(loc="best", ncol=6)
+
+        except Exception as e:
+            logger.exception(f"Error drawing tyre inventory usage - {e}")
+
+        fig.canvas.draw()
+
+    def plot_per_vehicle_mileage(self):
+        '''Track per vehicle average mileage on replacement'''
+        fig, ax = plt.subplots(tight_layout=True)
+        canvas = FigureCanvasTkAgg(fig, master=self)
+
+        # Clear Canvas
+        self.plot_widget.destroy()
+        self.toolbar.destroy()
+
+        # Create canvas
+        self.plot_widget = canvas.get_tk_widget()
+        self.plot_widget.place(anchor='n', relheight='0.68', relwidth='0.98', relx='0.5', rely='0.22')
+        plt.rcParams.update({'font.size': 7})
+        self.toolbar = NavigationToolbar2Tk(canvas, self, pack_toolbar=False)
+        self.toolbar.config(background='white')
+        self.toolbar.update()
+        self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
+
+        try:
+            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            dlist = []
+            for veh in df['Vehicle_Number'].unique():
+                md = df[df['Vehicle_Number'] == veh].pivot_table(values="Vehicle_Mileage", index='Date', columns=['Vehicle_Number']).diff().reset_index(drop=True).mean().to_dict()
+                for k, v in md.items():
+                    ddict = {"Vehicle Number": k, "Average Tyre Mileage": v}
+                    dlist.append(ddict)
+
+            pv = pd.DataFrame(dlist)
+
+            y_ulim = pv["Average Tyre Mileage"].max() + 100
+            y_llim = pv["Average Tyre Mileage"].min() - 500
+            pv.set_index('Vehicle Number', drop=True).plot(kind='bar', ax=ax, title="Average Mileage Per Vehicle", ylim=(y_llim, y_ulim))
             ax.legend(loc="best", ncol=6)
 
             ax.grid('on', which='major', axis='both' )
