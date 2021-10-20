@@ -5,11 +5,11 @@
 #                                                                             #
 #-----------------------------------------------------------------------------#
 #
-# Ident        : MY_Tyre_App.py
+# Ident        : Tint_App.py
 __version__ = "1.0.0"
 __author__ = "Adrian Loo"
 """
-The Tyre App for tracking tyre usage and inventory for Modern Wong
+The Tyre Inventory & Tracking App (Tint_App)
 """
 #
 # History
@@ -28,7 +28,8 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
 # 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
 # 2021-10-20: 1.0.0-alpha [Adrian Loo] Complete Tyre Tracking and Inventory Page functions
-# 2021-10-20: 1.0.0 [Adrian Loo] Complete Dashboard Page functions
+# 2021-10-20: 1.0.0 [Adrian Loo] Complete Dashboard Page functions, configurable title. change appname
+# @021-10-20: 1.0.0 [Adrian Loo] Renamed as Tint_App
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -140,9 +141,9 @@ def create_logger(name, basefile, version, loglevel):
     return logger
 
 
-class TyreApp(tk.Tk):
+class TintApp(tk.Tk):
     '''
-    Main GUI interface for MW Tyre App
+    Main GUI interface for Tint App
 
     Initiation codes
     app = TyreApp()
@@ -157,7 +158,7 @@ class TyreApp(tk.Tk):
 
         tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
         tk.Tk.wm_title(
-            self, "Modern Wong Transport Tyre Inventory and Tracking - {}".format(main_ver))
+            self, "TINT [Tyre Inventory & Tracking] - {} (by AxonBots Pte Ltd)".format(main_ver))
 
         self.geometry("1220x720+10+10")
         self.resizable(False, False)  # Change to not resizable to manage image rendering and tk.entry positioning
@@ -197,12 +198,37 @@ class TyreApp(tk.Tk):
             logger.info("No Configuration file found, creating default configuration file")
             self.create_config()
             logger.info("Loading Configuration page")
-            tkMessageBox.showinfo("Information", "Welcome to ModernWong Transport Tyre Tracking App.\n\n\nTo start using the app, please fill in the profiles for the following:\n\n\n1. Vehicles - enter your fleet numbers\n\n2. Tyre - Enter the information for the tyres you have in stock\n\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
+            tkMessageBox.showinfo("Information", "Welcome to TINT-Tyre Inventory & Tracking App.\n\n\nTo start using the app, please fill in the profiles for the following:\n\n\n1. Vehicles - enter your fleet numbers\n\n2. Tyre - Enter the information for the tyres you have in stock\n\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
             self.start_frame(ConfigPage)
+
+        # Create Menu bar
+        self.menubar = tk.Menu(self)
+        filemenu = tk.Menu(self.menubar, tearoff=0)
+        filemenu.add_command(label="Start", command=lambda: self.show_frame(StartPage))
+        filemenu.add_command(label="Inventory", command=lambda: self.show_frame(TrackInvPage))
+        filemenu.add_command(label="Tyre", command=lambda: self.show_frame(TrackTyrePage))
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=lambda: self.on_exit())
+        self.menubar.add_cascade(label="Navigate", menu=filemenu)
+
+        settingmenu = tk.Menu(self.menubar, tearoff=0)
+        settingmenu.add_command(label="Configure", command=lambda: self.show_frame(ConfigPage))
+        self.menubar.add_cascade(label="Settings", menu=settingmenu)
+
+        helpmenu = tk.Menu(self.menubar, tearoff=0)
+        helpmenu.add_command(label="Documentation", command=None)
+        helpmenu.add_command(label="About", command=None)
+        self.menubar.add_cascade(label="Help", menu=helpmenu)
+
+        self.config(menu=self.menubar)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
 
     def check_config_profiles(self):
+        '''Checks if all configuration profiles have at least 1 entry.
+        if all profiles have at least 1 entry, return True
+        else return False'''
+
         tree = ET.parse(CONFIG_FILE)
         root = tree.getroot()
 
@@ -252,9 +278,13 @@ class TyreApp(tk.Tk):
         root = tree.getroot()
 
         values = []
-        el_ls = root.findall(profile)[0].findall(f"{profile}Profile")
+        if profile == "App":
+            el_ls = root.findall(profile)[0].findall(f"{profile}Settings")
+        else:
+            el_ls = root.findall(profile)[0].findall(f"{profile}Profile")
         for el in el_ls:
-            values.append(el.attrib[key])
+            if key in el.attrib.keys():
+                values.append(el.attrib[key])
 
         return values
 
@@ -290,9 +320,15 @@ class StartPage(tk.Frame):
         self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
+        try:
+            user_company = f"{controller.load_profile_list('App', 'Company')[0]}\nTyre Inventory & Tracking"
+        except Exception as e:
+            logger.exception(f"Error loading company name - {e}")
+            user_company = "Tyre Inventory & Tracking"
+
         self.header_lbl = ttk.Label(self)
         self.header_lbl.configure(font='{Source Sans Pro} 32 {bold}',
-                                  justify='center', text='Modern Wong Tyre & Inventory Tracking')
+                                  justify='center', text=user_company)
         self.header_lbl.place(anchor='n', relx='0.5', rely='0.1')
 
         self.track_tyre_lbl = ttk.Label(self)
@@ -1586,12 +1622,35 @@ class ConfigPage(tk.Frame):
 
         self.cfg_currency_lbl = ttk.Label(self.app_settings_lbf)
         self.cfg_currency_lbl.configure(font='{source sans pro} 11 {bold}', text='Currency: ')
-        self.cfg_currency_lbl.place(anchor='ne', relx='0.2', rely='0.1', x='0', y='0')
+        self.cfg_currency_lbl.place(anchor='ne', relx='0.25', rely='0.1', x='0', y='0')
 
         self.currency_tkvar = tk.StringVar(value='RM')
         self.currency_values = ['SGD']
         self.cfg_currency_opt = tk.OptionMenu(self.app_settings_lbf, self.currency_tkvar, 'RM', *self.currency_values, command=None)
-        self.cfg_currency_opt.place(anchor='nw', relwidth='0.15', relx='0.2', rely='0.05', x='0', y='0')
+        self.cfg_currency_opt.place(anchor='nw', relwidth='0.15', relx='0.25', rely='0.05', x='0', y='0')
+
+        self.cfg_company_lbl = ttk.Label(self.app_settings_lbf)
+        self.cfg_company_lbl.configure(font='{source sans pro} 11 {bold}', text='Company Name: ')
+        self.cfg_company_lbl.place(anchor='ne', relx='0.25', rely='0.5', x='0', y='0')
+
+        self.cfg_company_name_ent = ttk.Entry(self.app_settings_lbf)
+        self.cfg_company_name_ent.configure(foreground='grey', font='{source sans pro} 11 {}')
+        self.cfg_company_name_text = '''Eg: AxonBots Pte Ltd'''
+        self.cfg_company_name_ent.delete('0', 'end')
+
+        # Check for config file availability and load user define company name
+        if controller.check_config_profiles:
+            try:
+                self.cfg_company_name_ent.insert('0', controller.load_profile_list("App", "Company")[0])
+                self.cfg_company_name_ent.configure(foreground='black')
+            except Exception as e:
+                logger.exception(f"Error loading company name from config - {e}")
+                self.cfg_company_name_ent.insert('0', self.cfg_company_name_text)
+        else:
+            self.cfg_company_name_ent.insert('0', self.cfg_company_name_text)
+
+        self.cfg_company_name_ent.bind('<FocusIn>', self.on_widget_click)
+        self.cfg_company_name_ent.place(anchor='nw', relwidth='0.3', relx='0.25', rely='0.5', x='0', y='0')
 
         self.cfg_setting_save_btn = ttk.Button(self.app_settings_lbf, command=self.save_app_settings)
         self.cfg_setting_save_btn.configure(text='Save Settings')
@@ -1615,6 +1674,8 @@ class ConfigPage(tk.Frame):
         self.default_tyre= {self.cfg_tyre_brand_ent: self.cfg_tyre_brand_text, self.cfg_tyre_name_ent: self.cfg_tyre_name_text, self.cfg_tyre_size_ent: self.cfg_tyre_size_text}
 
         self.default_employee = {self.cfg_emp_name_ent: self.cfg_emp_name_text, self.cfg_emp_contact_ent: self.cfg_emp_contact_text}
+
+        self.default_settings = {self.cfg_company_name_ent: self.cfg_company_name_text}
 
         self.widget_entry = {}
 
@@ -1777,7 +1838,15 @@ class ConfigPage(tk.Frame):
 
     def save_app_settings(self):
         '''Update app settings to systemconfig.xml file'''
-        user_select_text = f"Currency: {self.currency_tkvar.get()}\nDo you want to proceed?"
+
+        if self.cfg_company_name_ent.get() == self.cfg_company_name_text:
+            tkMessageBox.showerror("Error", "Please enter your company name and try again.")
+            return None
+        else:
+            pass
+
+        user_select_text = f"Currency: {self.currency_tkvar.get()}\nCompany Name: {self.cfg_company_name_ent.get()}\nDo you want to proceed?"
+
         if tkMessageBox.askyesno("Confirm?", user_select_text):
             logger.info("User Proceed")
 
@@ -1787,10 +1856,25 @@ class ConfigPage(tk.Frame):
             for el in list(root.findall("App")[0].iter()):
                 if el.tag == "AppSettings" and "Currency" in el.attrib.keys():
                     el.attrib['Currency'] = self.currency_tkvar.get()
+                    break
                 else:
                     pass
 
-            xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="\t")
+            attrib = {"Company": self.cfg_company_name_ent.get()}
+            # Check if AppSettings with attrib containing "Company" is available
+            if len(root.findall("App")[0].findall("AppSettings")) != 2:
+                for i in root:
+                    if i.tag == 'App':
+                        ET.SubElement(i, "AppSettings", attrib)
+                        break
+            else:
+                for el in list(root.findall("App")[0].iter()):
+                    if el.tag == "AppSettings" and "Company" in el.attrib.keys():
+                        el.attrib['Company'] = self.cfg_company_name_ent.get()
+                    else:
+                        pass
+
+            xmlstr = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml')).toprettyxml(indent="\t")
             with open(CONFIG_FILE, 'w') as fw:
                 fw.writelines(line + "\n" for line in xmlstr.split("\n") if not line.strip() == "")
         else:
@@ -2161,5 +2245,5 @@ if __name__ == "__main__":
     logger = create_logger(__name__, __file__, __version__, 10)
 
     # Launch App
-    app = TyreApp()
+    app = TintApp()
     app.mainloop()

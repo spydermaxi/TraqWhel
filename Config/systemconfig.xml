@@ -2,6 +2,7 @@
 <System>
 	<App>
 		<AppSettings Currency="RM"/>
+		<AppSettings Company="Modern Wong Transport Sdn Bdh"/>
 	</App>
 	<Vehicle>
 		<VehicleProfile Truck_num="SMT8234E" Trailer_num="SMTTTTTT"/>
