@@ -27,6 +27,7 @@ The Tyre App for tracking tyre usage and inventory for Modern Wong
 # 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
 # 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
 # 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
+# 2021-10-20: 1.0.0-alpha [Adrian Loo] Complete Tyre Tracking and Inventory Page functions
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -244,6 +245,18 @@ class TyreApp(tk.Tk):
         with open(CONFIG_FILE, "w") as f:
             f.write(xml_str)
 
+    def load_profile_list(self, profile, key):
+        '''Loads up the config file (xml), search for the profile and key to return a list of values'''
+        tree = ET.parse(CONFIG_FILE)
+        root = tree.getroot()
+
+        values = []
+        el_ls = root.findall(profile)[0].findall(f"{profile}Profile")
+        for el in el_ls:
+            values.append(el.attrib[key])
+
+        return values
+
     def start_frame(self, cont):
 
         frame = self.frames[cont]
@@ -396,14 +409,15 @@ class TrackInvPage(tk.Frame):
         self.total_cost_lbl.configure(font='{source sans pro} 18 {bold}', justify='right', text='Total Cost ({}): '.format(self.currency))
         self.total_cost_lbl.place(anchor='ne', relx='0.4', rely='0.435', x='0', y='0')
 
-        self.tyre_name_entry = ttk.Entry(self.inv_input_lbf)
-        self.tyre_name_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
-        self._tyre_name_text_ = '''Enter Product Name'''
-        self.tyre_name_entry.delete('0', 'end')
-        self.tyre_name_entry.insert('0', self._tyre_name_text_)
-        self.tyre_name_entry.bind('<FocusIn>', self.on_tyre_name_entry_click)
-        self.tyre_name_entry.bind('<FocusOut>', self.on_tyre_name_entry_focus_out)
-        self.tyre_name_entry.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.1', x='0', y='0')
+        self.add_tyre_btn = ttk.Button(self.inv_input_lbf, command=lambda: controller.show_frame(ConfigPage))
+        self.add_tyre_btn.configure(text='Add New Tyre')
+        self.add_tyre_btn.place(anchor='ne', relx='0.98', rely='0.01', x='0', y='0')
+
+        self.tyrenm_tkvar = tk.StringVar(value='Select Tyre Name')
+        self.tyrenm_values = controller.load_profile_list("Tyre", "Tyre_name")
+        self.tyrenm_opt = tk.OptionMenu(self.inv_input_lbf, self.tyrenm_tkvar, 'Select Tyre Name', *self.tyrenm_values, command=None)
+        self.tyrenm_opt.configure(font='{source sans pro} 14 {}')
+        self.tyrenm_opt.place(anchor='nw', relheight='0.06', relwidth='0.5', relx='0.4', rely='0.1', x='0', y='0')
 
         self.qty_entry = ttk.Entry(self.inv_input_lbf)
         self.qty_entry.configure(foreground = 'grey', cursor='hand2', font='{source sans pro} 16 {}')
@@ -507,15 +521,15 @@ class TrackInvPage(tk.Frame):
 
     def submit_entry(self):
         #validate entry:
-        if any([self.tyre_name_entry.get() == self._tyre_name_text_, self.qty_entry.get() == self.qty_text_, self.cost_entry.get() == self.cost_text_]):
-            pass
+        if any([self.tyrenm_tkvar.get() == "Select Tyre Name", self.qty_entry.get() == self.qty_text_, self.cost_entry.get() == self.cost_text_]):
+            tkMessageBox.showerror("Error", "Some missing information.\nPlease check entry and try again.")
         else:
-            if tkMessageBox.askyesno("Confirmation", "You've entered the following:\nProduct Name: {}\nProduct Quantiy: {}\nCost\\Unit: {}{}\nTotal Cost: {}{}\nConfirm?".format(self.tyre_name_entry.get(), self.qty_entry.get(), self.currency, self.cost_entry.get(), self.currency, self.total_cost_entry.get())):
+            if tkMessageBox.askyesno("Confirmation", "You've entered the following:\nProduct Name: {}\nProduct Quantiy: {}\nCost\\Unit: {}{}\nTotal Cost: {}{}\nConfirm?".format(self.tyrenm_tkvar.get(), self.qty_entry.get(), self.currency, self.cost_entry.get(), self.currency, self.total_cost_entry.get())):
                 logger.info("User Confirmed")
 
                 ddict = {}
                 ddict['Datetime'] = datetime.now().replace(microsecond=0)
-                ddict['Tyre_Name'] = self.tyre_name_entry.get()
+                ddict['Tyre_Name'] = self.tyrenm_tkvar.get()
                 ddict['Quantity'] = float(self.qty_entry.get())
                 ddict['Cost/Unit'] = float(self.cost_entry.get())
                 ddict['Total_Cost'] = float(self.total_cost_entry.get())
@@ -537,7 +551,7 @@ class TrackInvPage(tk.Frame):
 
                 tkMessageBox.showinfo("Information", "Update Inventory Success!")
 
-                self.clear_entries(self.tyre_name_entry, self._tyre_name_text_)
+                self.tyrenm_tkvar.set("Select Tyre Name")
                 self.clear_entries(self.qty_entry, self.qty_text_)
                 self.clear_entries(self.cost_entry, self.cost_text_)
                 self.clear_total_cost_entry(self.total_cost_entry, self.total_cost_text_)
@@ -584,19 +598,6 @@ class TrackInvPage(tk.Frame):
         entry_box.insert(0, entry_text)
         entry_box.config(foreground = 'grey')
         entry_box['state'] = 'readonly'
-
-    def on_tyre_name_entry_click(self, event):
-        """function that gets called whenever entry is clicked"""
-        if self.tyre_name_entry.get() == self._tyre_name_text_:
-           self.tyre_name_entry.delete(0, "end")
-           self.tyre_name_entry.insert(0, '')
-           self.tyre_name_entry.config(foreground = 'black')
-
-    def on_tyre_name_entry_focus_out(self, event):
-        """function that checked the entry field after every input"""
-        if self.tyre_name_entry.get() == '':
-            self.tyre_name_entry.insert(0, self._tyre_name_text_)
-            self.tyre_name_entry.config(foreground = 'grey')
 
     def on_qty_entry_click(self, event):
         """function that gets called whenever entry is clicked"""
@@ -669,7 +670,7 @@ class TrackTyrePage(tk.Frame):
         self.view_lbf = ttk.Labelframe(self)
 
         self.view_vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-        self.view_vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique() # to do generate vehicle list from configuration table
+        self.view_vehnum_values = controller.load_profile_list("Vehicle", "Truck_num")
         self.view_vehnum_opt = tk.OptionMenu(self.view_lbf, self.view_vehnum_tkvar, 'Select Vehicle Number', *self.view_vehnum_values, command=None)
         self.view_vehnum_opt.place(anchor='ne', relheight='0.5', relwidth='0.5', relx='0.52', rely='0.02', x='0', y='0')
 
@@ -742,12 +743,12 @@ class TrackTyrePage(tk.Frame):
         self.update_mile_lbl.place(anchor='ne', relx='0.42', rely='0.61', x='0', y='0')
 
         self.emp_tkvar = tk.StringVar(value='Select Employee')
-        self.emp_values = ['Adrian', 'Shyong', 'Sudin'] # To do lookup config for list for emp names
+        self.emp_values = controller.load_profile_list("Employee", "Emp_name")
         self.empname_opt = tk.OptionMenu(self.update_lbf, self.emp_tkvar, 'Select Employee', *self.emp_values, command=None)
         self.empname_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.42', rely='-0.02', x='0', y='0')
 
         self.vehnum_tkvar = tk.StringVar(value='Select Vehicle')
-        self.vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique() # To do lookup config for list of veh numbers
+        self.vehnum_values = controller.load_profile_list("Vehicle", "Truck_num")
         self.vehnum_opt = tk.OptionMenu(self.update_lbf, self.vehnum_tkvar, 'Select Vehicle', *self.vehnum_values, command=None)
         self.vehnum_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.42', rely='0.28', x='0', y='0')
 
@@ -764,7 +765,7 @@ class TrackTyrePage(tk.Frame):
         self.tyrename_lbl.place(anchor='ne', relx='0.76', x='0', y='0')
 
         self.tyrename_tkvar = tk.StringVar(value='Select Tyre Name')
-        self.tyrename_values = ['x', 'y', 'z'] # to do lookup config for list of tyre names
+        self.tyrename_values = controller.load_profile_list("Tyre", "Tyre_name")
         self.tyrename_opt = tk.OptionMenu(self.update_lbf, self.tyrename_tkvar, 'Select Tyre Name', *self.tyrename_values, command=None)
         self.tyrename_opt.place(anchor='nw', relheight='0.3', relwidth='0.18', relx='0.76', rely='-0.02', x='0', y='0')
 
@@ -1073,6 +1074,12 @@ class TrackTyrePage(tk.Frame):
             self.clear_vehicle_tyre_data()
 
     def check_tyre_data(self):
+        if self.view_vehnum_tkvar.get() == "Select Vehicle Number":
+            tkMessageBox.showerror("Error", "Please select a vehicle number to display record")
+            return None
+        else:
+            pass
+
         try:
             df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
             df = df[df['Vehicle_Number'] == self.view_vehnum_tkvar.get()]
@@ -1423,6 +1430,7 @@ class ConfigPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.controller = controller
         self.configure(height=str(controller.winfo_height()-20), width=str(controller.winfo_width()-20))
         self.grid(column='0', row='0', sticky='n')
 
@@ -1578,7 +1586,7 @@ class ConfigPage(tk.Frame):
         self.display_port_lbf.place(anchor='n', relheight='0.865', relwidth='0.56', relx='0.71', rely='0.06', x='0', y='0')
         # --- End of Display Port --- #
 
-        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=lambda: controller.show_frame(StartPage))
+        self.back_btn = ttk.Button(self, text="Back to Main", width=20, command=self.back_to_main)
         self.back_btn.place(anchor='n', relx='0.1', rely='0.95')
 
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
@@ -2118,6 +2126,13 @@ class ConfigPage(tk.Frame):
             _text_ = "There is no difference in number of items"
             logger.info(_text_)
             tkMessageBox.showinfo("Information", _text_)
+
+    def back_to_main(self):
+        if self.controller.check_config_profiles():
+            self.controller.show_frame(StartPage)
+        else:
+            logger.warning("Config validation fail, did not load main page")
+            tkMessageBox.showwarning("Warning", "You need to enter at least one entry for each profile\n('Vehicle', 'Tyre', 'Employee').\nPlease check entries using the 'Load / Edit' button for each profile")
 
 
 # ----- Execution ----- #
