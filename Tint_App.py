@@ -8,6 +8,22 @@
 # Ident        : Tint_App.py
 __version__ = "1.0.0"
 __author__ = "axonspyder"
+
+__license__ = '''BSD 3-Clause License
+
+Copyright (c) 2021, AXONBOTS Pte Ltd
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or withoutmodification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.'''
+
 """
 The Tyre Inventory & Tracking App (Tint_App)
 """
@@ -30,6 +46,7 @@ The Tyre Inventory & Tracking App (Tint_App)
 # 2021-10-20: 1.0.0-alpha [axonspyder] Complete Tyre Tracking and Inventory Page functions
 # 2021-10-20: 1.0.0 [axonspyder] Complete Dashboard Page functions, configurable title. change appname
 # 2021-10-20: 1.0.0 [axonspyder] Renamed as Tint_App
+# 2021-10-22: 1.0.0 [axonspyder] Add menubar to TintApp, and MsgBox class for popups
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -79,10 +96,13 @@ LARGE_FONT = ("Verdana", 12, "bold")
 LB_FONT = ("Verdana", 11, "bold")
 RB_FONT = ("Verdana", 10)
 
-CONFIG_SOURCE = os.path.join(os.getcwd(), "Config")
-CONFIG_FILE = os.path.join(CONFIG_SOURCE, "systemconfig.xml")
+CONFIG_SOURCE = os.path.join(os.getcwd(), "config")
+ASSETS_SOURCE = os.path.join(CONFIG_SOURCE, "assets")
+DATA_SOURCE = os.path.join(os.getcwd(), "data")
+LOG_SOURCE = os.path.join(os.getcwd(), "logs")
+DOCS_SOURCE = os.path.join(os.getcwd(), "docs")
 
-DATA_SOURCE = os.path.join(os.getcwd(), "Data")
+CONFIG_FILE = os.path.join(CONFIG_SOURCE, "systemconfig.xml")
 
 INV_FILE_NAME = "tyre_inventory_db.csv"
 INV_DB = os.path.join(DATA_SOURCE, INV_FILE_NAME)
@@ -90,8 +110,8 @@ INV_DB = os.path.join(DATA_SOURCE, INV_FILE_NAME)
 INV_IN_FILE_NAME = "tyre_inventory_in_db.csv"
 INV_IN_DB = os.path.join(DATA_SOURCE, INV_IN_FILE_NAME)
 
-TRACK_FILE_NAME = "tyre_tracking_db.csv"
-TRACK_DB = os.path.join(DATA_SOURCE, TRACK_FILE_NAME)
+TYRE_FILE_NAME = "tyre_tracking_db.csv"
+TYRE_DB = os.path.join(DATA_SOURCE, TYRE_FILE_NAME)
 
 
 def create_logger(name, basefile, version, loglevel):
@@ -110,9 +130,8 @@ def create_logger(name, basefile, version, loglevel):
         NOTSET      0
     '''
     # Create log directory
-    log_dir = os.path.join(os.getcwd(), "Logs")
     try:
-        os.mkdir(log_dir)
+        os.mkdir(LOG_SOURCE)
     except Exception as e:
         pass
 
@@ -123,7 +142,7 @@ def create_logger(name, basefile, version, loglevel):
     formatter = logging.Formatter(
         '%(asctime)s\t[%(funcName)s][%(levelname)s]:\t%(message)s')
 
-    file_handler = logging.FileHandler(os.path.join(log_dir, f'{os.path.basename(basefile).split(".")[0]}_{str(datetime.now().date())}.log'))
+    file_handler = logging.FileHandler(os.path.join(LOG_SOURCE, f'{os.path.basename(basefile).split(".")[0]}_{str(datetime.now().date())}.log'))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
@@ -147,19 +166,16 @@ class TintApp(tk.Tk):
     Main GUI interface for Tint App
 
     Initiation codes
-    app = TyreApp()
+    app = TintApp()
     app.mainloop()
     '''
 
     def __init__(self, *args, **kwargs):
 
-        main_ver = __version__
-
         tk.Tk.__init__(self, *args, **kwargs)
 
-        tk.Tk.iconbitmap(self, default='Config\\mw_truck.ico')
-        tk.Tk.wm_title(
-            self, "TINT [Tyre Inventory & Tracking] - {} (by AxonBots Pte Ltd)".format(main_ver))
+        tk.Tk.iconbitmap(self, default=os.path.join(ASSETS_SOURCE, 'mw_truck.ico'))
+        tk.Tk.wm_title(self, "TINT [Tyre Inventory & Tracking] - {} (by AxonBots Pte Ltd)".format(__version__))
 
         self.geometry("1220x720+10+10")
         self.resizable(False, False)  # Change to not resizable to manage image rendering and tk.entry positioning
@@ -208,6 +224,7 @@ class TintApp(tk.Tk):
         filemenu.add_command(label="Start", command=lambda: self.show_frame(StartPage))
         filemenu.add_command(label="Inventory", command=lambda: self.show_frame(TrackInvPage))
         filemenu.add_command(label="Tyre", command=lambda: self.show_frame(TrackTyrePage))
+        filemenu.add_command(label="Dashboard", command=lambda: self.show_frame(DashboardPage))
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=lambda: self.on_exit())
         self.menubar.add_cascade(label="Navigate", menu=filemenu)
@@ -217,13 +234,25 @@ class TintApp(tk.Tk):
         self.menubar.add_cascade(label="Settings", menu=settingmenu)
 
         helpmenu = tk.Menu(self.menubar, tearoff=0)
-        helpmenu.add_command(label="Documentation", command=None)
-        helpmenu.add_command(label="About", command=None)
+        helpmenu.add_command(label="Documentation", command=self.docs)
+        helpmenu.add_command(label="About", command=self.about)
         self.menubar.add_cascade(label="Help", menu=helpmenu)
 
         self.config(menu=self.menubar)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
+
+    def docs(self):
+        '''launch documentation window'''
+        os.startfile(os.path.join(DOCS_SOURCE, "_build","html","index.html"))
+
+    def about(self):
+        '''launch about window'''
+        _title_ = "About TINT"
+        _abouthd_ = "TINT - Tyre Inventory & Tracking"
+        _abouttxt_ = f"Copyright © 2021 AXONBOTS Pte Ltd\nVersion {__version__}"
+
+        msg = MsgBox(title=_title_, header=_abouthd_, txtbox=True, txtboxmessage=__license__, txtboxwidth='50', message=_abouttxt_)
 
     def check_config_profiles(self):
         '''Checks if all configuration profiles have at least 1 entry.
@@ -350,7 +379,7 @@ class StartPage(tk.Frame):
         self.track_tyre_btn = ttk.Button(
             self, command=lambda: controller.show_frame(TrackTyrePage))
         self.mw_blue_truck_png = tk.PhotoImage(
-            file=os.path.join(os.getcwd(), "Config", 'wheel.png'))
+            file=os.path.join(ASSETS_SOURCE, 'wheel.png'))
         self.track_tyre_btn.configure(
             image=self.mw_blue_truck_png, text='Track Tyre')
         self.track_tyre_btn.place(
@@ -359,7 +388,7 @@ class StartPage(tk.Frame):
         self.track_inv_btn = ttk.Button(
             self, command=lambda: controller.show_frame(TrackInvPage))
         self.mw_green_truck_png = tk.PhotoImage(
-            file=os.path.join(os.getcwd(), "Config", 'inventory.png'))
+            file=os.path.join(ASSETS_SOURCE, 'inventory.png'))
         self.track_inv_btn.configure(
             image=self.mw_green_truck_png, text='Track Inventory')
         self.track_inv_btn.place(
@@ -368,7 +397,7 @@ class StartPage(tk.Frame):
         self.launch_db_btn = ttk.Button(
             self, command=lambda: controller.show_frame(DashboardPage))
         self.mw_white_truck_png = tk.PhotoImage(
-            file=os.path.join(os.getcwd(), "Config", 'dashboard.png'))
+            file=os.path.join(ASSETS_SOURCE, 'dashboard.png'))
         self.launch_db_btn.configure(
             image=self.mw_white_truck_png, text='Launch Dashboard')
         self.launch_db_btn.place(
@@ -377,7 +406,7 @@ class StartPage(tk.Frame):
         self.settings_btn = ttk.Button(
             self, command=lambda: controller.show_frame(ConfigPage))
         self.settings_png = tk.PhotoImage(
-            file=os.path.join(os.getcwd(), "Config", 'settings.png'))
+            file=os.path.join(ASSETS_SOURCE, 'settings.png'))
         self.settings_btn.configure(
             image=self.settings_png, text='Launch Settings')
         self.settings_btn.place(
@@ -535,7 +564,7 @@ class TrackInvPage(tk.Frame):
 
     def update_all_data(self):
         inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
-        trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+        trk = pd.read_csv(TYRE_DB, parse_dates=['Date'])
 
         inv['Date'] = pd.to_datetime(inv['Datetime'].dt.date)
 
@@ -709,7 +738,7 @@ class TrackTyrePage(tk.Frame):
         self.view_lbf = ttk.Labelframe(self)
 
         self.view_vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-        self.view_vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
+        self.view_vehnum_values = pd.read_csv(TYRE_DB)['Vehicle_Number'].unique()
         self.view_vehnum_opt = tk.OptionMenu(self.view_lbf, self.view_vehnum_tkvar, 'Select Vehicle Number', *self.view_vehnum_values, command=None)
         self.view_vehnum_opt.place(anchor='ne', relheight='0.5', relwidth='0.5', relx='0.52', rely='0.02', x='0', y='0')
 
@@ -821,9 +850,8 @@ class TrackTyrePage(tk.Frame):
         self.display_lbf.configure(height='200', labelanchor='n', text='Display Frame', width='200')
         self.display_lbf.place(anchor='n', relheight='0.7', relwidth='0.98', relx='0.5', rely='0.22', x='0', y='0')
 
-        #loc_img = Image.open(os.path.join(os.getcwd(), "Config", "tyre_location.png"))
         self.tyreloc_lbl = ttk.Label(self.display_lbf)
-        self.tyre_locations_png = tk.PhotoImage(file=os.path.join(os.getcwd(), "Config", "tyre_locations.png"))
+        self.tyre_locations_png = tk.PhotoImage(file=os.path.join(ASSETS_SOURCE, "tyre_locations.png"))
         self.tyreloc_lbl.configure(image=self.tyre_locations_png, text='tyre location')
         self.tyreloc_lbl.pack(side='top')
 
@@ -1103,10 +1131,10 @@ class TrackTyrePage(tk.Frame):
                         logger.exception(f"Error appending input - {e}")
                         tkMessageBox.showerror("Error", "Error appending input. Please contact developer.")
 
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = pd.read_csv(TYRE_DB, parse_dates=['Date'])
             df = df.append(pd.DataFrame(dlist))
 
-            df.to_csv(TRACK_DB, index=False)
+            df.to_csv(TYRE_DB, index=False)
 
             tkMessageBox.showinfo("Success", "Tyre Event Updated")
 
@@ -1120,7 +1148,7 @@ class TrackTyrePage(tk.Frame):
             pass
 
         try:
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = pd.read_csv(TYRE_DB, parse_dates=['Date'])
             df = df[df['Vehicle_Number'] == self.view_vehnum_tkvar.get()]
             df.reset_index(drop=True, inplace=True)
 
@@ -1188,14 +1216,14 @@ class TrackTyrePage(tk.Frame):
         if os.path.isdir(exp_dir):
             logger.info(f"Export directory - [{exp_dir}]")
             try:
-                shutil.copy(TRACK_DB, os.path.join(exp_dir, TRACK_FILE_NAME))
+                shutil.copy(TYRE_DB, os.path.join(exp_dir, TYRE_FILE_NAME))
             except IOError as io:
-                logger.exception(f"Error copying {TRACK_DB} - {e}")
+                logger.exception(f"Error copying {TYRE_DB} - {e}")
 
-            if all([os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME))]):
+            if all([os.path.isfile(os.path.join(exp_dir, TYRE_FILE_NAME)), os.path.isfile(os.path.join(exp_dir, TYRE_FILE_NAME))]):
                 tkMessageBox.showinfo("Success", "File export Success")
             else:
-                err_msg = "File export error! - Path: {} is {}".format(os.path.join(exp_dir, TRACK_FILE_NAME), os.path.isfile(os.path.join(exp_dir, TRACK_FILE_NAME)))
+                err_msg = "File export error! - Path: {} is {}".format(os.path.join(exp_dir, TYRE_FILE_NAME), os.path.isfile(os.path.join(exp_dir, TYRE_FILE_NAME)))
                 logger.error(err_msg)
                 tkMessageBox.showerror("Error", err_msg)
         else:
@@ -1314,7 +1342,7 @@ class DashboardPage(tk.Frame):
 
         elif self._func_tkvar.get() == "Average Tyre Mileage":
             self._vehnum_tkvar = tk.StringVar(value='Select Vehicle Number')
-            _vehnum_values = pd.read_csv(TRACK_DB)['Vehicle_Number'].unique()
+            _vehnum_values = pd.read_csv(TYRE_DB)['Vehicle_Number'].unique()
             self.sel_veh_num_menu = tk.OptionMenu(self.option_lblf, self._vehnum_tkvar, 'Select Vehicle Number', *_vehnum_values, command=None)
             self.sel_veh_num_menu.place(anchor='nw', relheight='0.8', relwidth='0.2', relx='0.01', rely='0.1', x='0', y='0')
 
@@ -1351,7 +1379,7 @@ class DashboardPage(tk.Frame):
         self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
 
         try:
-            trk = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            trk = pd.read_csv(TYRE_DB, parse_dates=['Date'])
             inv = pd.read_csv(INV_IN_DB, parse_dates=['Datetime'])
 
             trk['Date'] = trk['Date'].dt.floor(freq='d')
@@ -1410,7 +1438,7 @@ class DashboardPage(tk.Frame):
         self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
 
         try:
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = pd.read_csv(TYRE_DB, parse_dates=['Date'])
 
             pv = df[df['Vehicle_Number'] == vehicle_number].pivot_table(values='Vehicle_Mileage', index='Date', columns=['Tyre_Location'], aggfunc='mean')
 
@@ -1453,7 +1481,7 @@ class DashboardPage(tk.Frame):
         self.toolbar.place(anchor='n', relheight='0.05', relwidth='0.98', relx='0.5', rely='0.891')
 
         try:
-            df = pd.read_csv(TRACK_DB, parse_dates=['Date'])
+            df = pd.read_csv(TYRE_DB, parse_dates=['Date'])
             dlist = []
             for veh in df['Vehicle_Number'].unique():
                 md = df[df['Vehicle_Number'] == veh].pivot_table(values="Vehicle_Mileage", index='Date', columns=['Vehicle_Number']).diff().reset_index(drop=True).mean().to_dict()
@@ -2235,6 +2263,35 @@ class ConfigPage(tk.Frame):
         else:
             logger.warning("Config validation fail, did not load main page")
             tkMessageBox.showwarning("Warning", "You need to enter at least one entry for each profile\n('Vehicle', 'Tyre', 'Employee').\nPlease check entries using the 'Load / Edit' button for each profile")
+
+
+class MsgBox(tk.Toplevel):
+
+    def __init__(self, title="TINT App", txtbox=False, txtboxwidth='30', txtboxmessage="Welcome to TINT App", header="TINT App", message="Welcome to TINT App"):
+        tk.Toplevel.__init__(self)
+
+        self.title(title)
+        self.resizable(False, False)
+
+        self.header = tk.Label(self, text=header)
+        self.header.configure(font='{source sans pro} 16 {bold}', justify='center')
+        self.header.pack(padx=50, pady=5, fill='both', expand=True)
+
+        if txtbox:
+            self.txtbox = tk.Text(self)
+            self.txtbox.configure(wrap='word', height='10', width=txtboxwidth)
+            self.txtbox.insert('0.0', txtboxmessage, ("centered",))
+            self.txtbox.tag_configure("centered", justify="center")
+            self.txtbox.configure(state='disabled')
+            self.txtbox.pack(padx=15, pady=5, fill='both', expand=True)
+
+        self.label = tk.Label(self, text=message)
+        self.label.configure(font='{source sans pro} 8 {bold}', justify='center')
+        self.label.pack(padx=50, pady=5, fill='both', expand=True)
+
+        self.button = tk.Button(self, text="Close")
+        self.button['command'] = self.destroy
+        self.button.pack(pady=10, padx=5, side='top')
 
 
 # ----- Execution ----- #
