@@ -7,32 +7,33 @@
 #
 # Ident        : Tint_App.py
 __version__ = "1.0.0"
-__author__ = "Adrian Loo"
+__author__ = "axonspyder"
 """
 The Tyre Inventory & Tracking App (Tint_App)
 """
 #
 # History
-# 2021-09-29: 0.0.1 [Adrian Loo] Development start
-# 2021-09-29: 0.0.1 [Adrian Loo] Complete StartPage
-# 2021-09-30: 0.0.1 [Adrian Loo] Fix page size and position
-# 2021-10-01: 0.0.1 [Adrian Loo] Complete Track Inventory Page
-# 2021-10-02: 0.0.1 [Adrian Loo] Complete Track Inventory Page functions
-# 2021-10-04: 0.0.1 [Adrian Loo] Complete Dashboard Page, functions and visualization
-# 2021-10-04: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
-# 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
-# 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
-# 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
-# 2021-10-15: 1.0.0-alpha [Adrian Loo] Complete ConfigPage UI design
-# 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
-# 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
-# 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
-# 2021-10-20: 1.0.0-alpha [Adrian Loo] Complete Tyre Tracking and Inventory Page functions
-# 2021-10-20: 1.0.0 [Adrian Loo] Complete Dashboard Page functions, configurable title. change appname
-# @021-10-20: 1.0.0 [Adrian Loo] Renamed as Tint_App
+# 2021-09-29: 0.0.1 [axonspyder] Development start
+# 2021-09-29: 0.0.1 [axonspyder] Complete StartPage
+# 2021-09-30: 0.0.1 [axonspyder] Fix page size and position
+# 2021-10-01: 0.0.1 [axonspyder] Complete Track Inventory Page
+# 2021-10-02: 0.0.1 [axonspyder] Complete Track Inventory Page functions
+# 2021-10-04: 0.0.1 [axonspyder] Complete Dashboard Page, functions and visualization
+# 2021-10-04: 0.0.1 [axonspyder] Complete Tyre Tracking page, functions and visuals
+# 2021-10-05: 0.0.1 [axonspyder] Complete Tyre Tracking page, check Serial Number function
+# 2021-10-06: 0.0.1 [axonspyder] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
+# 2021-10-13: 1.0.0-alpha [axonspyder] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
+# 2021-10-15: 1.0.0-alpha [axonspyder] Complete ConfigPage UI design
+# 2021-10-17: 1.0.0-alpha [axonspyder] Add create_config(), clear_vehicle_profile() and update_vehicle()
+# 2021-10-18: 1.0.0-alpha [axonspyder] Add focus in/out for config page entries, update profile methods.
+# 2021-10-19: 1.0.0-alpha [axonspyder] Complete ConfigPage functions
+# 2021-10-20: 1.0.0-alpha [axonspyder] Complete Tyre Tracking and Inventory Page functions
+# 2021-10-20: 1.0.0 [axonspyder] Complete Dashboard Page functions, configurable title. change appname
+# 2021-10-20: 1.0.0 [axonspyder] Renamed as Tint_App
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
+#                           BSD 3-Clause License                              #
 #                  Copyright (c) 2021, AXONBOTS PTE. LTD.                     #
 #                           All rights reserved                               #
 #                                                                             #
