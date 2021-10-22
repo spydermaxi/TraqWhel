@@ -40,4 +40,4 @@ Coming soon
 ---
 [//]: <> (License)
 ## License
-MIT © [axonspyder](https://github.com/axonspyder)
+BSD 3-Clause © [axonspyder](https://github.com/axonspyder)
