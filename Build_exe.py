@@ -53,7 +53,7 @@ def clear_scraps():
 
 def make_exe():
     # Call PyInstaller actions
-    subprocess.check_output(f"pyinstaller --icon=config/mw_truck.ico --noconsole {APP_NAME}.py", shell=True)
+    subprocess.check_output(f"pyinstaller --icon=config/assets/mw_truck.ico --noconsole {APP_NAME}.py", shell=True)
 
     print("Conversion complete. Start asset transfer")
     # Copy config folder into distribution
