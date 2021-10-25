@@ -47,6 +47,7 @@ The Tyre Inventory & Tracking App (Tint_App)
 # 2021-10-20: 1.0.0 [axonspyder] Complete Dashboard Page functions, configurable title. change appname
 # 2021-10-20: 1.0.0 [axonspyder] Renamed as Tint_App
 # 2021-10-22: 1.0.0 [axonspyder] Add menubar to TintApp, and MsgBox class for popups
+# 2021-10-25: 1.0.0 [axonspyder] Updated MsgBox functions to center window, firsttimeload popups and sequencing
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -177,6 +178,15 @@ class TintApp(tk.Tk):
         tk.Tk.iconbitmap(self, default=os.path.join(ASSETS_SOURCE, 'mw_truck.ico'))
         tk.Tk.wm_title(self, "TINT [Tyre Inventory & Tracking] - {} (by AxonBots Pte Ltd)".format(__version__))
 
+        if os.path.isfile(CONFIG_FILE):
+            self.firsttimeload = False
+            logger.info(f"Configuration file exists in - {CONFIG_FILE}")
+        else:
+            self.firsttimeload = True
+            logger.info(f"Configuration file not exist - Creating first time configurations")
+            self.create_config()
+            logger.info(f"Configuration file created - {CONFIG_FILE}")
+
         self.geometry("1220x720+10+10")
         self.resizable(False, False)  # Change to not resizable to manage image rendering and tk.entry positioning
         self.minsize(1016, 600)
@@ -203,21 +213,6 @@ class TintApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        # Validate if configuration has entries
-        if os.path.isfile(CONFIG_FILE):
-            if self.check_config_profiles():
-                logger.info("Loading Start page")
-                self.start_frame(StartPage)
-            else:
-                logger.info("Loading Configuration page")
-                self.start_frame(ConfigPage)
-        else:
-            logger.info("No Configuration file found, creating default configuration file")
-            self.create_config()
-            logger.info("Loading Configuration page")
-            tkMessageBox.showinfo("Information", "Welcome to TINT-Tyre Inventory & Tracking App.\n\n\nTo start using the app, please fill in the profiles for the following:\n\n\n1. Vehicles - enter your fleet numbers\n\n2. Tyre - Enter the information for the tyres you have in stock\n\n3. Employee - Enter the employee names who will be in charge or replacing tyres")
-            self.start_frame(ConfigPage)
-
         # Create Menu bar
         self.menubar = tk.Menu(self)
         filemenu = tk.Menu(self.menubar, tearoff=0)
@@ -241,6 +236,29 @@ class TintApp(tk.Tk):
         self.config(menu=self.menubar)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
+
+        # Validate if configuration has entries
+        if self.firsttimeload:
+            logger.info("Loading Configuration page for the first time")
+            self.start_frame(ConfigPage)
+        else:
+            if self.check_config_profiles():
+                logger.info("Loading Start page")
+                self.start_frame(StartPage)
+            else:
+                logger.info("Some profiles not filled in - Loading Configuration page")
+                self.start_frame(ConfigPage)
+
+    def first_time_msg(self):
+        '''launch first time message box'''
+        logger.info("Loading first time msg")
+        _title_ = "Welcome!"
+        _header_ = "Welcome to TINT - Tyre Inventory & Tracking App"
+        _text_ = "To start using the app, please fill in the at least one entry for each profiles for the following:\n\n1. Vehicles - enter your fleet numbers\n\n2. Tyre - Enter the information for the tyres you have in stock\n\n3. Employee - Enter the employee names who will be in charge or replacing tyres"
+
+        ftm = MsgBox(title=_title_, header=_header_, message=_text_)
+        ftm.button.configure(text="OK", width=20)
+        ftm.attributes("-topmost", True)
 
     def docs(self):
         '''launch documentation window'''
@@ -324,6 +342,10 @@ class TintApp(tk.Tk):
         frame.tkraise()
         logger.info("Show frame - {}".format(cont))
         logger.info("Application initialized")
+
+        if self.firsttimeload or not self.check_config_profiles():
+            logger.info("This is first time load or missing profile entries detected - launching first time msg")
+            self.first_time_msg()
 
     def show_frame(self, dst_cont):
 
@@ -2292,6 +2314,19 @@ class MsgBox(tk.Toplevel):
         self.button = tk.Button(self, text="Close")
         self.button['command'] = self.destroy
         self.button.pack(pady=10, padx=5, side='top')
+
+        # -- Position the window on cneter of screen -- #
+        self.update_idletasks()
+        width = self.winfo_width()
+        frm_width = self.winfo_rootx() - self.winfo_x()
+        win_width = width + 2 * frm_width
+        height = self.winfo_height()
+        titlebar_height = self.winfo_rooty() - self.winfo_y()
+        win_height = height + titlebar_height + frm_width
+        x = self.winfo_screenwidth() // 2 - win_width // 2
+        y = self.winfo_screenheight() // 2 - win_height // 2
+        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        self.deiconify()
 
 
 # ----- Execution ----- #
