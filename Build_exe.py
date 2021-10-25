@@ -7,14 +7,14 @@
 #
 # Ident        : Build_exe.py
 __version__ = "1.0.0"
-__author__ = "axonspyder"
+__author__ = "Adrian Loo"
 """
 Build_exe.py is built for easy CI of the target app
 """
 #
 # History:
-# 2021-10-20: 1.0.0 [axonspyder] first commit
-# 2021-10-25: 1.0.0 [axonspyder] create clear_scraps(), make_app_exe(), make_install_exe()
+# 2021-10-20: 1.0.0 [Adrian Loo] first commit
+# 2021-10-25: 1.0.0 [Adrian Loo] create clear_scraps(), make_app_exe(), make_install_exe()
 #
 #--------------------------------------------------------------------#
 #                                                                    #
@@ -27,6 +27,7 @@ Build_exe.py is built for easy CI of the target app
 # Import modules
 import os
 import glob
+import ctypes
 import sys
 import subprocess
 import shutil
@@ -78,10 +79,12 @@ def make_app_exe():
         shutil.copytree(DATA_SOURCE, DATA_DEST)
         print("Copied data folder into dist App folder")
         for f in glob.glob(os.path.join(DATA_DEST, "*.csv")):
-            if not "Empty" in os.path.basename(f):
+            if not "Empty" in f:
+                print(f"Removing {f}")
                 os.remove(f)
-            else:
-                os.rename(f, f.replace(" - Empty", ""))
+        for f in glob.glob(os.path.join(DATA_DEST, "*.csv")):
+            print(f"Renaming {f} to {f.replace(" - Empty", "")}")
+            os.rename(f, f.replace(" - Empty", ""))
         shutil.copytree(DOCS_SOURCE, DOCS_DEST)
         print("Copied docs folder into dist App folder")
     except Exception as e:
@@ -100,12 +103,16 @@ def make_install_exe():
 
 def make_install_package():
     '''create iexpress installation package'''
-    pass
+    if ctypes.windll.shell32.IsUserAnAdmin():
+        print("I'm admin")
+    else:
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
 
 def main():
     clear_scraps()
     make_app_exe()
     make_install_exe()
+    make_install_package()
 
 if __name__ == "__main__":
     main()

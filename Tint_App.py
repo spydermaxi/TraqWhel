@@ -7,7 +7,7 @@
 #
 # Ident        : Tint_App.py
 __version__ = "1.0.0"
-__author__ = "axonspyder"
+__author__ = "Adrian Loo"
 
 __license__ = '''BSD 3-Clause License
 
@@ -29,25 +29,25 @@ The Tyre Inventory & Tracking App (Tint_App)
 """
 #
 # History
-# 2021-09-29: 0.0.1 [axonspyder] Development start
-# 2021-09-29: 0.0.1 [axonspyder] Complete StartPage
-# 2021-09-30: 0.0.1 [axonspyder] Fix page size and position
-# 2021-10-01: 0.0.1 [axonspyder] Complete Track Inventory Page
-# 2021-10-02: 0.0.1 [axonspyder] Complete Track Inventory Page functions
-# 2021-10-04: 0.0.1 [axonspyder] Complete Dashboard Page, functions and visualization
-# 2021-10-04: 0.0.1 [axonspyder] Complete Tyre Tracking page, functions and visuals
-# 2021-10-05: 0.0.1 [axonspyder] Complete Tyre Tracking page, check Serial Number function
-# 2021-10-06: 0.0.1 [axonspyder] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
-# 2021-10-13: 1.0.0-alpha [axonspyder] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
-# 2021-10-15: 1.0.0-alpha [axonspyder] Complete ConfigPage UI design
-# 2021-10-17: 1.0.0-alpha [axonspyder] Add create_config(), clear_vehicle_profile() and update_vehicle()
-# 2021-10-18: 1.0.0-alpha [axonspyder] Add focus in/out for config page entries, update profile methods.
-# 2021-10-19: 1.0.0-alpha [axonspyder] Complete ConfigPage functions
-# 2021-10-20: 1.0.0-alpha [axonspyder] Complete Tyre Tracking and Inventory Page functions
-# 2021-10-20: 1.0.0 [axonspyder] Complete Dashboard Page functions, configurable title. change appname
-# 2021-10-20: 1.0.0 [axonspyder] Renamed as Tint_App
-# 2021-10-22: 1.0.0 [axonspyder] Add menubar to TintApp, and MsgBox class for popups
-# 2021-10-25: 1.0.0 [axonspyder] Updated MsgBox functions to center window, firsttimeload popups and sequencing
+# 2021-09-29: 0.0.1 [Adrian Loo] Development start
+# 2021-09-29: 0.0.1 [Adrian Loo] Complete StartPage
+# 2021-09-30: 0.0.1 [Adrian Loo] Fix page size and position
+# 2021-10-01: 0.0.1 [Adrian Loo] Complete Track Inventory Page
+# 2021-10-02: 0.0.1 [Adrian Loo] Complete Track Inventory Page functions
+# 2021-10-04: 0.0.1 [Adrian Loo] Complete Dashboard Page, functions and visualization
+# 2021-10-04: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, functions and visuals
+# 2021-10-05: 0.0.1 [Adrian Loo] Complete Tyre Tracking page, check Serial Number function
+# 2021-10-06: 0.0.1 [Adrian Loo] Fix exit issue by adding sys.exit() created exe version release. Fix Plot issue when data set in empty. Add entry clear function after tyre data submission.
+# 2021-10-13: 1.0.0-alpha [Adrian Loo] Complete Track Tyre Page functions and display, StartPage GUI Design and ConfigPage setup
+# 2021-10-15: 1.0.0-alpha [Adrian Loo] Complete ConfigPage UI design
+# 2021-10-17: 1.0.0-alpha [Adrian Loo] Add create_config(), clear_vehicle_profile() and update_vehicle()
+# 2021-10-18: 1.0.0-alpha [Adrian Loo] Add focus in/out for config page entries, update profile methods.
+# 2021-10-19: 1.0.0-alpha [Adrian Loo] Complete ConfigPage functions
+# 2021-10-20: 1.0.0-alpha [Adrian Loo] Complete Tyre Tracking and Inventory Page functions
+# 2021-10-20: 1.0.0 [Adrian Loo] Complete Dashboard Page functions, configurable title. change appname
+# 2021-10-20: 1.0.0 [Adrian Loo] Renamed as Tint_App
+# 2021-10-22: 1.0.0 [Adrian Loo] Add menubar to TintApp, and MsgBox class for popups
+# 2021-10-25: 1.0.0 [Adrian Loo] Updated MsgBox functions to center window, firsttimeload popups and sequencing. Add configuration lvie update function
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -199,17 +199,17 @@ class TintApp(tk.Tk):
 
         logger.info("Application initialized")
 
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        self.container = tk.Frame(self)
+        self.container.pack(side="top", fill="both", expand=True)
 
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
 
         for F in (StartPage, TrackInvPage, TrackTyrePage, DashboardPage, ConfigPage):
 
-            frame = F(container, self)
+            frame = F(self.container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
@@ -248,6 +248,15 @@ class TintApp(tk.Tk):
             else:
                 logger.info("Some profiles not filled in - Loading Configuration page")
                 self.start_frame(ConfigPage)
+
+    def update_frames(self):
+        '''Update Frames'''
+        for F in (StartPage, TrackInvPage, TrackTyrePage, DashboardPage):
+            frame = F(self.container, self)
+            del self.frames[F]
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+        self.show_frame(ConfigPage)
 
     def first_time_msg(self):
         '''launch first time message box'''
@@ -1730,6 +1739,8 @@ class ConfigPage(tk.Frame):
 
         self.widget_entry = {}
 
+        self.controller = controller
+
     def on_widget_click(self, evt):
         self.widget = self.focus_get()
         logger.info(f"{self.widget} is in focus")
@@ -1800,6 +1811,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_vehicle_profile_ent()
+        self.controller.update_frames()
 
     def clear_tyre_profile_ent(self):
         for wg, txt in self.default_tyre.items():
@@ -1843,6 +1855,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_tyre_profile_ent()
+        self.controller.update_frames()
 
     def clear_employee_profile_ent(self):
         for wg, txt in self.default_employee.items():
@@ -1886,6 +1899,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_employee_profile_ent()
+        self.controller.update_frames()
 
     def save_app_settings(self):
         '''Update app settings to systemconfig.xml file'''
@@ -1928,6 +1942,7 @@ class ConfigPage(tk.Frame):
             xmlstr = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml')).toprettyxml(indent="\t")
             with open(CONFIG_FILE, 'w') as fw:
                 fw.writelines(line + "\n" for line in xmlstr.split("\n") if not line.strip() == "")
+            self.controller.update_frames()
         else:
             logger.info("User abort")
 

@@ -7,7 +7,7 @@
 #
 # Ident        : Install_TINT.py
 __version__ = "1.0.0"
-__author__ = "axonspyder"
+__author__ = "Adrian Loo"
 
 __license__ = '''BSD 3-Clause License
 
@@ -29,7 +29,7 @@ Installation app for TINT App
 """
 #
 # History
-# 2021-10-25: 1.0.0 [axonspyder] Create install sequence, UI and functions
+# 2021-10-25: 1.0.0 [Adrian Loo] Create install sequence, UI and functions
 #
 #--------------------------------------------------------------------#
 #                                                                    #
