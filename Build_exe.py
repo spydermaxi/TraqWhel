@@ -118,6 +118,11 @@ def make_install_exe():
 
 def make_install_package(sed_exist=False, sed_filename="", sed_str=""):
     '''create iexpress installation package'''
+    try:
+        os.mkdir(SED_DIR)
+    except:
+        pass
+
     if sed_exist:
         print(f"SED file exists - creating SED file")
         sed_filepath = os.path.join(DIST_DIR, sed_filename)
