@@ -14,7 +14,8 @@ Build_exe.py is built for easy CI of the target app
 #
 # History:
 # 2021-10-20: 1.0.0 [Adrian Loo] first commit
-# 2021-10-25: 1.0.0 [Adrian Loo] create clear_scraps(), make_app_exe(), make_install_exe()
+# 2021-10-25: 1.0.0 [Adrian Loo] create clear_scraps(), make_app_exe(), make_install_exe(). Fix syntax error. execute sys.exit() on end
+# 2021-10-25: 1.0.0 [Adrian Loo] Add iexpress automation using SED file is SED file exists
 #
 #--------------------------------------------------------------------#
 #                                                                    #
@@ -40,11 +41,25 @@ DATA_SOURCE = os.path.join(os.getcwd(), "data")
 DOCS_SOURCE = os.path.join(os.getcwd(), "docs")
 
 DIST_DIR = os.path.join(os.getcwd(), "dist")
+SED_DIR = r"C:\Local" # requires a directory without space to work correctly
 APP_DIR = os.path.join(DIST_DIR, APP_NAME)
 CONFIG_DEST = os.path.join(DIST_DIR, APP_NAME, "config")
 DATA_DEST = os.path.join(DIST_DIR, APP_NAME, "data")
 DOCS_DEST = os.path.join(DIST_DIR, APP_NAME, "docs")
 
+
+def check_sed():
+    sed_ls = glob.glob(os.path.join(DIST_DIR, "*.SED"))
+    if len(sed_ls) == 1:
+        print(f"Found an SED file - {sed_ls[0]}")
+        with open(sed_ls[0], 'r') as f:
+            sed_str = f.read()
+        sed_exist = True
+        sed_filename = os.path.basename(sed_ls[0])
+        print("Existence set to True, file string copied")
+        return sed_exist, sed_filename, sed_str
+    else:
+        return False, "", ""
 
 def clear_scraps():
     '''Check for scraps and deletes them'''
@@ -83,7 +98,7 @@ def make_app_exe():
                 print(f"Removing {f}")
                 os.remove(f)
         for f in glob.glob(os.path.join(DATA_DEST, "*.csv")):
-            print(f"Renaming {f} to {f.replace(" - Empty", "")}")
+            print(f"Renaming {f} to {f.replace(' - Empty', '')}")
             os.rename(f, f.replace(" - Empty", ""))
         shutil.copytree(DOCS_SOURCE, DOCS_DEST)
         print("Copied docs folder into dist App folder")
@@ -101,18 +116,33 @@ def make_install_exe():
 
     print("Install EXE Conversion complete")
 
-def make_install_package():
+def make_install_package(sed_exist=False, sed_filename="", sed_str=""):
     '''create iexpress installation package'''
-    if ctypes.windll.shell32.IsUserAnAdmin():
-        print("I'm admin")
+    if sed_exist:
+        print(f"SED file exists - creating SED file")
+        sed_filepath = os.path.join(DIST_DIR, sed_filename)
+        with open(sed_filepath, 'w') as fw:
+            fw.write(sed_str)
+        fw.close()
+        sed_filepath = os.path.join(SED_DIR, sed_filename)
+        with open(sed_filepath, 'w') as fw:
+            fw.write(sed_str)
+        fw.close()
+        if os.path.isfile(sed_filepath):
+            print(f"SED File is reading in - {sed_filepath}")
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", r"/N {}".format(sed_filepath), None, 1)
+        else:
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
 
 def main():
+    sed_exist, sed_filename, sed_str = check_sed()
     clear_scraps()
     make_app_exe()
     make_install_exe()
-    make_install_package()
+    make_install_package(sed_exist, sed_filename, sed_str)
+    sys.exit()
 
 if __name__ == "__main__":
     main()

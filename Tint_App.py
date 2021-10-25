@@ -176,7 +176,7 @@ class TintApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
 
         tk.Tk.iconbitmap(self, default=os.path.join(ASSETS_SOURCE, 'mw_truck.ico'))
-        tk.Tk.wm_title(self, "TINT [Tyre Inventory & Tracking] - {} (by AxonBots Pte Ltd)".format(__version__))
+        tk.Tk.wm_title(self, "TINT [Tyre Inventory & Tracking] - {}".format(__version__))
 
         if os.path.isfile(CONFIG_FILE):
             self.firsttimeload = False
@@ -249,14 +249,14 @@ class TintApp(tk.Tk):
                 logger.info("Some profiles not filled in - Loading Configuration page")
                 self.start_frame(ConfigPage)
 
-    def update_frames(self):
+    def update_frames(self, page):
         '''Update Frames'''
         for F in (StartPage, TrackInvPage, TrackTyrePage, DashboardPage):
             frame = F(self.container, self)
             del self.frames[F]
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
-        self.show_frame(ConfigPage)
+        self.show_frame(page)
 
     def first_time_msg(self):
         '''launch first time message box'''
@@ -564,6 +564,8 @@ class TrackInvPage(tk.Frame):
         self.exit_btn = ttk.Button(self, text="Close", width=20, command=lambda: controller.on_exit())
         self.exit_btn.place(anchor='n', relx='0.9', rely='0.95')
 
+        self.controller = controller
+
     def update_inv_trend(self):
         try:
             self.ax.cla()
@@ -653,6 +655,8 @@ class TrackInvPage(tk.Frame):
                 self.clear_entries(self.qty_entry, self.qty_text_)
                 self.clear_entries(self.cost_entry, self.cost_text_)
                 self.clear_total_cost_entry(self.total_cost_entry, self.total_cost_text_)
+
+                self.controller.update_frames(TrackInvPage)
 
             else:
                 pass
@@ -1107,6 +1111,8 @@ class TrackTyrePage(tk.Frame):
 
         self.page_clear = True
 
+        self.controller = controller
+
     def submit_tyre_data(self):
 
         if tkMessageBox.askyesno("Confirm?", "Are you sure you want to save data?\nYou cannot undo this action."):
@@ -1170,6 +1176,7 @@ class TrackTyrePage(tk.Frame):
             tkMessageBox.showinfo("Success", "Tyre Event Updated")
 
             self.clear_vehicle_tyre_data()
+            self.controller.update_frames(TrackTyrePage)
 
     def check_tyre_data(self):
         if self.view_vehnum_tkvar.get() == "Select Vehicle Number":
@@ -1811,7 +1818,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_vehicle_profile_ent()
-        self.controller.update_frames()
+        self.controller.update_frames(ConfigPage)
 
     def clear_tyre_profile_ent(self):
         for wg, txt in self.default_tyre.items():
@@ -1855,7 +1862,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_tyre_profile_ent()
-        self.controller.update_frames()
+        self.controller.update_frames(ConfigPage)
 
     def clear_employee_profile_ent(self):
         for wg, txt in self.default_employee.items():
@@ -1899,7 +1906,7 @@ class ConfigPage(tk.Frame):
             pass
 
         self.clear_employee_profile_ent()
-        self.controller.update_frames()
+        self.controller.update_frames(ConfigPage)
 
     def save_app_settings(self):
         '''Update app settings to systemconfig.xml file'''
@@ -1942,7 +1949,7 @@ class ConfigPage(tk.Frame):
             xmlstr = minidom.parseString(ET.tostring(root, encoding='utf8', method='xml')).toprettyxml(indent="\t")
             with open(CONFIG_FILE, 'w') as fw:
                 fw.writelines(line + "\n" for line in xmlstr.split("\n") if not line.strip() == "")
-            self.controller.update_frames()
+            self.controller.update_frames(ConfigPage)
         else:
             logger.info("User abort")
 

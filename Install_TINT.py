@@ -30,6 +30,7 @@ Installation app for TINT App
 #
 # History
 # 2021-10-25: 1.0.0 [Adrian Loo] Create install sequence, UI and functions
+# 2021-10-25: 1.0.0 [Adrian Loo] Fix Progress page initialize message
 #
 #--------------------------------------------------------------------#
 #                                                                    #
@@ -146,24 +147,29 @@ class InstallTint(tk.Tk):
 
         logger.info("Application initialized")
 
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        self.container = tk.Frame(self)
+        self.container.pack(side="top", fill="both", expand=True)
 
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
 
         self.default_path = os.path.join(os.path.expanduser("~"), APP_NAME)
         self.frames = {}
 
         for F in (StartPage, ProgressPage, CompletePage):
 
-            frame = F(container, self)
+            frame = F(self.container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(StartPage)
 
         self.protocol('WM_DELETE_WINDOW', self.on_exit)
+
+    def update_prgpg(self):
+        del self.frames[ProgressPage]
+        frame = ProgressPage(self.container, self)
+        self.frames[ProgressPage] = frame
 
     def show_frame(self, dst_cont):
 
@@ -226,6 +232,7 @@ class StartPage(tk.Frame):
         if os.path.isdir(install_path):
             self.controller.default_path = os.path.join(os.path.normpath(install_path), APP_NAME)
             logger.info(f"User selected path - {self.controller.default_path}")
+            self.controller.update_prgpg()
             self.controller.show_frame(ProgressPage)
         else:
             logger.info(f"Unable to proceed. Operation was cancelled - {install_path}")
@@ -273,6 +280,8 @@ class ProgressPage(tk.Frame):
 
         self.controller = controller
         self.unpacked = False
+
+
 
     def next(self):
         if self.unpacked:
