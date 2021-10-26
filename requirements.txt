@@ -1,0 +1,4 @@
+pandas==1.2.4
+WMI==1.5.1
+matplotlib==3.4.3
+pyinstaller
