@@ -135,9 +135,9 @@ def make_install_package(sed_exist=False, sed_filename="", sed_str=""):
         fw.close()
         if os.path.isfile(sed_filepath):
             print(f"SED File is reading in - {sed_filepath}")
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", r"/N {}".format(sed_filepath), None, 1)
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", r"C:\Windows\SysWOW64\iexpress.exe", r"/N {}".format(sed_filepath), None, 1)
         else:
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", r"C:\Windows\SysWOW64\iexpress.exe", None, None, 1)
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
 

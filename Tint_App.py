@@ -1183,7 +1183,7 @@ class TrackTyrePage(tk.Frame):
             tkMessageBox.showerror("Error", "Please select a vehicle number to display record")
             return None
         else:
-            pass
+            logger.info(f"Vehicle selected - {self.view_vehnum_tkvar.get()}")
 
         try:
             df = pd.read_csv(TYRE_DB, parse_dates=['Date'])
@@ -1197,6 +1197,8 @@ class TrackTyrePage(tk.Frame):
 
             mileage = df[df['Date'] == df['Date'].max()]['Vehicle_Mileage'].max()
             last_mod = df['Date'].max().date()
+
+            logger.info(f"Mileage is {mileage}, Last Date is {last_mod}")
 
             self.view_veh_info_lbl = ttk.Label(self.display_lbf)
             self.view_veh_info_lbl.configure(background="#4D6073", foreground='white', font='{Source Sans Pro} 11 {}', justify='center', text=f"Vehicle Number: {self.view_vehnum_tkvar.get()}\nVehicle Mileage: {mileage}km\nLast Modified: {last_mod}")
@@ -1214,6 +1216,7 @@ class TrackTyrePage(tk.Frame):
             self.page_clear = False
 
         except Exception as e:
+            logger.exception(f"Error while loading tyre data - {e}")
             tkMessageBox.showerror("Error", "Please check Vehicle Number selection")
             self.clear_tyre_data()
 
