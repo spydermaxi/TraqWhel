@@ -3,5 +3,9 @@ _Reference/
 _Scratch/
 build/
 dist/
+env/
+.DS_Store
 *.spec
 *.log
+*.zip
+systemconfig.xml*
