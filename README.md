@@ -1,6 +1,6 @@
 [//]: <> (Project Title)
 # TINT_App
-### An open source Tyre Inventory & Tracking App for Freight Transport businesses looking to track tyre records and usages.
+### A Tyre Inventory & Tracking App for Freight Transport businesses looking to track tyre records and usages.
 
 [//]: <> (Build Status)
 
