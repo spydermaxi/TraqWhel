@@ -41,7 +41,7 @@ DATA_SOURCE = os.path.join(os.getcwd(), "data")
 DOCS_SOURCE = os.path.join(os.getcwd(), "docs")
 
 DIST_DIR = os.path.join(os.getcwd(), "dist")
-SED_DIR = r"C:\Local" # requires a directory without space to work correctly
+SED_DIR = r"C:\Local"  # requires a directory without space to work correctly
 APP_DIR = os.path.join(DIST_DIR, APP_NAME)
 CONFIG_DEST = os.path.join(DIST_DIR, APP_NAME, "config")
 DATA_DEST = os.path.join(DIST_DIR, APP_NAME, "data")
@@ -61,6 +61,7 @@ def check_sed():
     else:
         return False, "", ""
 
+
 def clear_scraps():
     '''Check for scraps and deletes them'''
     scraps = ["build", "dist", APP_NAME + ".spec", INSTALL_NAME + ".spec"]
@@ -78,6 +79,7 @@ def clear_scraps():
                 print(f"[{full_scrap}] is not file nor directory")
         except Exception as e:
             print(f"Error when checking {full_scrap} - {e}")
+
 
 def make_app_exe():
     # Call PyInstaller actions
@@ -109,12 +111,14 @@ def make_app_exe():
     shutil.make_archive(f"{APP_DIR}_Package", "zip", APP_DIR)
     print("Complete archive App")
 
+
 def make_install_exe():
     # Call PyInstaller actions
     subprocess.check_output(
         f"pyinstaller --icon=config/assets/mw_truck.ico --onefile --noconsole {INSTALL_NAME}.py", shell=True)
 
     print("Install EXE Conversion complete")
+
 
 def make_install_package(sed_exist=False, sed_filename="", sed_str=""):
     '''create iexpress installation package'''
@@ -141,6 +145,7 @@ def make_install_package(sed_exist=False, sed_filename="", sed_str=""):
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", "iexpress", None, None, 1)
 
+
 def main():
     sed_exist, sed_filename, sed_str = check_sed()
     clear_scraps()
@@ -148,6 +153,7 @@ def main():
     make_install_exe()
     make_install_package(sed_exist, sed_filename, sed_str)
     sys.exit()
+
 
 if __name__ == "__main__":
     main()

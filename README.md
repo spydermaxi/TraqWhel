@@ -16,28 +16,26 @@ Thus this project is born, to help businesses with low digital maturity, to trac
 ---
 [//]: <> (Framework Used)
 ## Language and Libraries
-TINT App is built using Python. the libraries used in this project includes:
+TINT App is built using [Python 3.8.12](https://docs.python.org/3.8/). the libraries used in this project includes:
+- [Tkinter](https://docs.python.org/3.8/library/tk.html)
 - [Pandas](https://pandas.pydata.org/)
 - [Matplotlib](https://matplotlib.org/)
-- [Pyinstaller](https://www.pyinstaller.org/) - For generating [exe](#) version
+- [Pyinstaller](https://www.pyinstaller.org/)
+
+TINT App was built for windows base
 
 ---
 [//]: <> (Installation)
 ## Installation
-Coming soon
+- Use git clone - `git clone https://github.com/axonspyder/TINT_App.git`
+- Use windows binary - Download the latest release [here](https://github.com/axonspyder/TINT_App/releases)
 
 ---
 [//]: <> (How to use?)
 ## How to use?
-Coming soon
-
----
-[//]: <> (Contribute)
-
----
-[//]: <> (Credits)
+Refer to user documentation [here](#)
 
 ---
 [//]: <> (License)
 ## License
-BSD 3-Clause © [axonspyder](https://github.com/axonspyder)
+BSD 3-Clause © [axonspyder - AxonBots Pte. Ltd.](https://github.com/axonspyder)

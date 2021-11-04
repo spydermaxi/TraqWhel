@@ -48,6 +48,7 @@ The Tyre Inventory & Tracking App (Tint_App)
 # 2021-10-20: 1.0.0 [Adrian Loo] Renamed as Tint_App
 # 2021-10-22: 1.0.0 [Adrian Loo] Add menubar to TintApp, and MsgBox class for popups
 # 2021-10-25: 1.0.0 [Adrian Loo] Updated MsgBox functions to center window, firsttimeload popups and sequencing. Add configuration lvie update function
+# 2021-11-04: 1.0.0 [Adrian Loo] Disable Dashboard options leaving only Tyre Usage dashboard
 #
 #-----------------------------------------------------------------------------#
 #                                                                             #
@@ -229,8 +230,11 @@ class TintApp(tk.Tk):
         self.menubar.add_cascade(label="Settings", menu=settingmenu)
 
         helpmenu = tk.Menu(self.menubar, tearoff=0)
+        helpmenu.add_command(label="Open Install Directory", command=self.open_dir)
+        helpmenu.add_command(label="View Logs", command=self.open_logs_dir)
         helpmenu.add_command(label="Documentation", command=self.docs)
         helpmenu.add_command(label="About", command=self.about)
+
         self.menubar.add_cascade(label="Help", menu=helpmenu)
 
         self.config(menu=self.menubar)
@@ -248,6 +252,12 @@ class TintApp(tk.Tk):
             else:
                 logger.info("Some profiles not filled in - Loading Configuration page")
                 self.start_frame(ConfigPage)
+
+    def open_logs_dir(self):
+        os.startfile(LOG_SOURCE)
+
+    def open_dir(self):
+        os.startfile(os.getcwd())
 
     def update_frames(self, page):
         '''Update Frames'''
@@ -1334,7 +1344,8 @@ class DashboardPage(tk.Frame):
         self.func_lblf.place(anchor='nw', relheight='0.9', relwidth='0.24', relx='0.01', rely='0.0', x='0', y='0')
 
         self._func_tkvar = tk.StringVar(value='Tyre Usage')
-        __values = ["Average Tyre Mileage", "Average Vehicle Mileage"]
+        # __values = ["Average Tyre Mileage", "Average Vehicle Mileage"]
+        __values = []
         self._func_tkvar.trace("w", self.update_setting_menu)
         self.func_menu = tk.OptionMenu(self.func_lblf, self._func_tkvar, 'Tyre Usage', *__values, command=None)
         self.func_menu.place(anchor='nw', relheight='0.98', relwidth='0.98', relx='0.01', rely='0.01', x='0', y='0')
