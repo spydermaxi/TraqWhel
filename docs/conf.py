@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'TINT'
+project = 'TINT - Tyre Inventory & Tracking'
 copyright = '2021, AxonBots Pte Ltd'
 author = 'Adrian Loo'
 
