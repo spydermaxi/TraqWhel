@@ -33,6 +33,7 @@ import sys
 import subprocess
 import shutil
 import zipfile
+import PyInstaller.__main__
 
 APP_NAME = "TINT_App"
 INSTALL_NAME = "Install_TINT"
@@ -83,8 +84,8 @@ def clear_scraps():
 
 def make_app_exe():
     # Call PyInstaller actions
-    subprocess.check_output(
-        f"pyinstaller --icon=config/assets/mw_truck.ico --noconsole {APP_NAME}.py", shell=True)
+    PyInstaller.__main__.run([f'{APP_NAME}.py', '--icon=config/assets/mw_truck.ico', '--noconsole'])
+    # subprocess.check_output(f"pyinstaller --icon=config/assets/mw_truck.ico --noconsole {APP_NAME}.py", shell=True)
 
     print("APP EXE Conversion complete. Start asset transfer")
     # Copy config folder into distribution
@@ -114,8 +115,8 @@ def make_app_exe():
 
 def make_install_exe():
     # Call PyInstaller actions
-    subprocess.check_output(
-        f"pyinstaller --icon=config/assets/mw_truck.ico --onefile --noconsole {INSTALL_NAME}.py", shell=True)
+    PyInstaller.__main__.run([f'{INSTALL_NAME}.py', '--icon=config/assets/mw_truck.ico', '--add-data', 'C:\\Users\\Adrian Loo\\AppData\\Local\\Programs\\Python\\Python38-32\\Lib\\site-packages\\pywin32_system32\\pythoncom38.dll;.', '--onefile', '--noconsole'])
+    # subprocess.check_output(f"pyinstaller --icon=config/assets/mw_truck.ico --onefile --noconsole {INSTALL_NAME}.py", shell=True)
 
     print("Install EXE Conversion complete")
 
