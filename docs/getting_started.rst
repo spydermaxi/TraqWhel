@@ -38,13 +38,6 @@ Install
 
    .. thumbnail:: images/install-6.png
 
-
-See video below on how to install TINT App
-
-   .. raw:: html
-
-      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/cWm7T3J-DGw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 -----
 
 Configure on First Launch
@@ -112,8 +105,16 @@ It is mandatory to input at least one entry for each profile below:
 
    .. thumbnail:: images/config-6.png
 
-See video below on how to update Configurations
+-----
+
+See video below on complete how to get started
 
    .. raw:: html
 
-      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/cWm7T3J-DGw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/dCOLbjH8tko" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+-----
+
+:doc:`Back to Main <index>`
+
+:doc:`Features <features>`
