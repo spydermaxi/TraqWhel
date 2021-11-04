@@ -20,10 +20,7 @@ This page provides all published user documentation for TINT - Tyre Inventory & 
    getting_started
    features
 
-
-Indices and tables
-==================
+-----
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
