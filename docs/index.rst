@@ -7,12 +7,6 @@
 Welcome to TINT documentation!
 ==============================
 
-This page provides all published user documentation for TINT - Tyre Inventory & Tracking App.
-
-.. important::
-
-   This documentation was generated on |today| based on version |release|.
-
 TINT - A Tyre Inventory & Tracking App for Freight Transport businesses looking to track tyre records and usages.
 
 Motivation
@@ -23,6 +17,12 @@ A small/medium frieght transport business in Malaysia is looking for options to 
 The business is a traditional and family run business, and employees are not tech savy enough to maintain a CRM subscription and get trained on using CRM software online. They use basic office tools to perform manual entries and retrievals
 
 Thus this project is born, to help businesses with low digital maturity, to track their tyre inventory.
+
+.. important::
+
+   This documentation was generated on |today| based on version |release|.
+
+This page provides all published user documentation for TINT - Tyre Inventory & Tracking App.
 
 .. toctree::
    :maxdepth: 1
