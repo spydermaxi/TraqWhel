@@ -7,7 +7,7 @@ This **Getting Started** guide explains where to get the latest release of TINT 
 Download
 ^^^^^^^^
 
-Download the installation package for Windows (x86) (`here <https://github.com/axonspyder/TINT_App/releases>`__)
+Download the installation package for Windows (x86) `here <https://github.com/axonspyder/TINT_App/releases>`__
 
 -----
 

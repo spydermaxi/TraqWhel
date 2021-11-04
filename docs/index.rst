@@ -34,26 +34,26 @@ This page provides all published user documentation for TINT - Tyre Inventory & 
 Languages and Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-TINT App was developed on (`Python 3.8.12 <https://docs.python.org/3.8/>`__).
+TINT App was developed on `Python 3.8.12 <https://docs.python.org/3.8/>`__.
 Libraries used in this project includes:
 
-   - (`Tkinter <https://docs.python.org/3.8/library/tk.html/>`__)
+   - `Tkinter <https://docs.python.org/3.8/library/tk.html/>`__
 
-   - (`Pandas <https://pandas.pydata.org/>`__)
+   - `Pandas <https://pandas.pydata.org/>`__
 
-   - (`Matplotlib <https://matplotlib.org/>`__)
+   - `Matplotlib <https://matplotlib.org/>`__
 
-   - (`Pyinstaller <https://www.pyinstaller.org/>`__)
+   - `Pyinstaller <https://www.pyinstaller.org/>`__
 
 Binary releases
 ^^^^^^^^^^^^^^^
 
-Binary releases can be found (`here <https://github.com/axonspyder/TINT_App/releases>`__)
+Binary releases can be found `here <https://github.com/axonspyder/TINT_App/releases>`__
 
 License
 ^^^^^^^
 
-BSD 3-Clause © (`axonspyder - AxonBots Pte. Ltd. <https://github.com/axonspyder/>`__)
+BSD 3-Clause © `axonspyder - AxonBots Pte. Ltd. <https://github.com/axonspyder/>`__
 
 -----
 
