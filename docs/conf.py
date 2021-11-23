@@ -57,5 +57,5 @@ html_static_path = ['_static']
 html_favicon = 'mw_truck.ico'
 
 # sphinxcontrib.images configuration
-images_config = {'default_image_width':"50%"
+images_config = {'default_image_width':"70%"
 }
