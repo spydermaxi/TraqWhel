@@ -2,7 +2,8 @@
 # TraqWhel - *Used to be TINT_App*
 ### A Tyre Inventory & Tracking App for Freight Transport businesses looking to track tyre records and usages.
 
-NOTE: I've recently renamed this repo/project fron TINT to TraqWhel. A lot of the project reference are still based on TINT. I will continue to update as and when i work on this project.
+> **NOTE:**
+> I've recently renamed this repo/project fron TINT to TraqWhel. A lot of the project reference are still based on TINT. I will continue to update as and when i work on this project.
 {: .alert .alert-info}
 
 [//]: <> (Build Status)
