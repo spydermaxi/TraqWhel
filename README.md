@@ -1,5 +1,5 @@
 [//]: <> (Project Title)
-# TINT_App
+# TraqWhel - *Used to be TINT_App*
 ### A Tyre Inventory & Tracking App for Freight Transport businesses looking to track tyre records and usages.
 
 [//]: <> (Build Status)
@@ -27,7 +27,7 @@ TINT App was built for windows base
 ---
 [//]: <> (Installation)
 ## Installation
-- Use git clone - `git clone https://github.com/axonspyder/TINT_App.git`
+- Use git clone - `git clone https://github.com/axonspyder/TraqWhel.git`
 - Use windows binary - Download the latest release [here](https://github.com/axonspyder/TINT_App/releases)
 
 ---
