@@ -4,7 +4,6 @@
 
 > **NOTE:**
 > I've recently renamed this repo/project fron TINT to TraqWhel. A lot of the project reference are still based on TINT. I will continue to update as and when i work on this project.
-{: .alert .alert-info}
 
 [//]: <> (Build Status)
 
